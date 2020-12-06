@@ -1,4 +1,4 @@
-<h1 align="center">Welcome to limitorderbook 👋</h1>
+<h1 align="center">Welcome to limitorderbook.js 👋</h1>
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-0.0.1--alpha.1-blue.svg?cacheSeconds=2592000" />
   <a href="#" target="_blank">
@@ -13,11 +13,11 @@
 ## Install
 
 ```sh
-yarn install limitorderbook
+yarn install limitorderbook.js
 ```
 
 ```javascript
-import OrderBook from "limitorderbook";
+import OrderBook from "limitorderbook.js";
 const book = new OrderBook();
 ```
 
