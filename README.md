@@ -1,1 +1,5 @@
 # LimitOrderBook
+
+```
+yarn add limitorderbook
+```
