@@ -1,17 +1,36 @@
 {
 	"name": "limitorderbook",
 	"version": "0.0.1-alpha.1",
-	"main": "index.js",
+	"description": "A fast LimitOrderBook in Javascript.",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"repository": "git@github.com:ShaunLWM/LimitOrderBook.git",
 	"author": "ShaunLWM",
 	"license": "MIT",
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsc",
+		"prepublish": "npm run copy && tsc",
+		"copy": "RMDIR /Q/S dist"
+	},
 	"dependencies": {
-		"ascii-string-align": "^1.0.4",
 		"denque": "^1.4.1",
 		"eventemitter2": "^6.4.3",
 		"yaca": "^1.2.3"
 	},
 	"devDependencies": {
 		"@types/node": "^14.14.10"
-	}
+	},
+	"keywords": [
+		"limitorderbook",
+		"limit order book",
+		"order book",
+		"fast order book",
+		"fast limit order book",
+		"stocks",
+		"ticker",
+		"tickers"
+	]
 }

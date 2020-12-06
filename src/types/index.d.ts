@@ -1,5 +1,3 @@
-declare module "ascii-string-align";
-
 type Quote = {
 	type: "limit" | "market",
 	side: "ask" | "bid",

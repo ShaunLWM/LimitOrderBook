@@ -7,11 +7,6 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.10.tgz#5958a82e41863cfc71f2307b3748e3491ba03785"
   integrity sha512-J32dgx2hw8vXrSbu4ZlVhn1Nm3GbeCFNw2FWL8S5QKucHGY0cyNwjdQdO+KMBZ4wpmC7KhLCiNsdk1RFRIYUQQ==
 
-ascii-string-align@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/ascii-string-align/-/ascii-string-align-1.0.4.tgz#4f65c5319773b5063e693388d216cd6ca2eac179"
-  integrity sha1-T2XFMZdztQY+aTOI0hbNbKLqwXk=
-
 denque@^1.4.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/denque/-/denque-1.4.1.tgz#6744ff7641c148c3f8a69c307e51235c1f4a37cf"
