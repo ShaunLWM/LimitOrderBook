@@ -10,27 +10,12 @@ export default class OrderList {
 
 	constructor() {}
 
-	*iterator() {
-		while (this.hasValue) {
-			if (this.last === null) {
-				if (this.headOrder !== null) this.last = this.headOrder;
-				else this.hasValue = false;
-			}
-
-			const prevOrder = this.last;
-			if (this.last!.nextOrder === null) this.last = null;
-			else this.last = this.last!.nextOrder;
-			if (this.last === null) this.hasValue = false;
-			yield prevOrder;
+	*[Symbol.iterator]() {
+		let current = this.headOrder;
+		while (current) {
+			yield current;
+			current = current.nextOrder;
 		}
-
-		this.last = null;
-		this.hasValue = true;
-		yield null;
-	}
-
-	[Symbol.iterator]() {
-		return this.iterator();
 	}
 
 	getHeadOrder() {
@@ -86,7 +71,7 @@ export default class OrderList {
 
 	toString() {
 		let str = "";
-		for (const element of this.iterator()) {
+		for (const element of this) {
 			if (element === null) break;
 			str += `Order: [${element.tradeId}] Price - ${element.price}, Quantity - ${element.quantity}, Timestamp - ${element.timestamp}\n`;
 		}
