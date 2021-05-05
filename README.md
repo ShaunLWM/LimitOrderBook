@@ -1,10 +1,5 @@
-<h1 align="center">Welcome to limitorderbook.js 👋</h1>
-<p>
-  <img alt="Version" src="https://img.shields.io/badge/version-0.0.1--alpha.1-blue.svg?cacheSeconds=2592000" />
-  <a href="#" target="_blank">
-    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" />
-  </a>
-</p>
+[![npm](https://img.shields.io/npm/dt/lob.js.svg)](https://github.com/ShaunLWM/lob.js/releases)
+[![npm](https://img.shields.io/npm/v/lob.js.svg)](https://www.npmjs.com/package/lob.js)
 
 > A fast LimitOrderBook in Javascript (still work in progress)
 
@@ -13,11 +8,11 @@
 ## Install
 
 ```sh
-yarn install limitorderbook.js
+yarn add lob.js
 ```
 
 ```javascript
-import OrderBook from "limitorderbook.js";
+import OrderBook from "lob.js";
 const book = new OrderBook();
 ```
 
@@ -49,7 +44,7 @@ Look into the `__test__` folder for sample usage.
 
 👤 **ShaunLWM**
 
-- Website: https://shaunlwm.me
+- Website: <https://shaunlwm.me>
 - Github: [@ShaunLWM](https://github.com/ShaunLWM)
 
 ## Show your support
