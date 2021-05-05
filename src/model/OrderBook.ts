@@ -42,11 +42,12 @@ export default class OrderBook extends EventEmitter2 {
 		if (fromData) this.time = quote.timestamp;
 		else this.updateTime();
 		quote.timestamp = this.time;
-		if (quote.quantity <= 0)
+		if (quote.quantity <= 0) {
 			return {
 				trades,
 				orderInBook,
 			};
+		}
 
 		if (!fromData) this.nextOrderId += 1;
 		if (orderType === "market") trades = this.processMarketOrder(quote);
@@ -54,7 +55,10 @@ export default class OrderBook extends EventEmitter2 {
 			let result = this.processLimitOrder(quote, fromData);
 			trades = result.trades;
 			orderInBook = result.orderInBook;
-		} else throw new Error(`orderType for processOrder() is neither 'market' or 'limit'`);
+		} else {
+			throw new Error(`orderType for processOrder() is neither 'market' or 'limit'`);
+		}
+
 		return {
 			trades,
 			orderInBook,

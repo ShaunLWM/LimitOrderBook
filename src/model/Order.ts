@@ -28,8 +28,9 @@ export default class Order implements Quote {
 			quantity > this.quantity &&
 			this.orderList.tailOrder !== null &&
 			this.orderList.tailOrder.toString() !== this.toString()
-		)
+		) {
 			this.orderList.moveToTail(this);
+		}
 
 		this.orderList.volume -= this.quantity - quantity;
 		this.timestamp = timestamp;

@@ -21,7 +21,7 @@ import OrderBook from "limitorderbook.js";
 const book = new OrderBook();
 ```
 
-Look into the ```__test__``` folder for sample usage.
+Look into the `__test__` folder for sample usage.
 
 ---
 
@@ -49,8 +49,8 @@ Look into the ```__test__``` folder for sample usage.
 
 👤 **ShaunLWM**
 
--   Website: https://shaunlwm.me
--   Github: [@ShaunLWM](https://github.com/ShaunLWM)
+- Website: https://shaunlwm.me
+- Github: [@ShaunLWM](https://github.com/ShaunLWM)
 
 ## Show your support
 

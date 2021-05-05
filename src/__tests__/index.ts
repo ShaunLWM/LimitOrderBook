@@ -12,28 +12,92 @@ const orderBook = new OrderBook();
 orderBook.on("transaction:new", (data) => {
 	console.log(`transaction`);
 	console.log(data);
-})
+});
 
-orderBook.on("order:new", data => {
+orderBook.on("order:new", (data) => {
 	console.log(`new order`);
 	console.log(data);
-})
+});
 
-orderBook.on("price:new", data => {
+orderBook.on("price:new", (data) => {
 	console.log(`new price`);
 	console.log(data);
-})
+});
 
 const limitOrders: Array<Quote> = [
-	{ type: "limit", side: "bid", quantity: 5, price: 99, tradeId: 104, timestamp: -1, orderId: -1 },
-	{ type: "limit", side: "bid", quantity: 6, price: 98, tradeId: 105, timestamp: -1, orderId: -1 },
-	{ type: "limit", side: "bid", quantity: 7, price: 99, tradeId: 106, timestamp: -1, orderId: -1 },
-	{ type: "limit", side: "bid", quantity: 8, price: 97, tradeId: 107, timestamp: -1, orderId: -1 },
+	{
+		type: "limit",
+		side: "bid",
+		quantity: 5,
+		price: 99,
+		tradeId: 104,
+		timestamp: -1,
+		orderId: -1,
+	},
+	{
+		type: "limit",
+		side: "bid",
+		quantity: 6,
+		price: 98,
+		tradeId: 105,
+		timestamp: -1,
+		orderId: -1,
+	},
+	{
+		type: "limit",
+		side: "bid",
+		quantity: 7,
+		price: 99,
+		tradeId: 106,
+		timestamp: -1,
+		orderId: -1,
+	},
+	{
+		type: "limit",
+		side: "bid",
+		quantity: 8,
+		price: 97,
+		tradeId: 107,
+		timestamp: -1,
+		orderId: -1,
+	},
 
-	{ type: "limit", side: "ask", quantity: 1, price: 101, tradeId: 100, timestamp: -1, orderId: -1 },
-	{ type: "limit", side: "ask", quantity: 2, price: 103, tradeId: 101, timestamp: -1, orderId: -1 },
-	{ type: "limit", side: "ask", quantity: 3, price: 101, tradeId: 102, timestamp: -1, orderId: -1 },
-	{ type: "limit", side: "ask", quantity: 4, price: 101, tradeId: 103, timestamp: -1, orderId: -1 },
+	{
+		type: "limit",
+		side: "ask",
+		quantity: 1,
+		price: 101,
+		tradeId: 100,
+		timestamp: -1,
+		orderId: -1,
+	},
+	{
+		type: "limit",
+		side: "ask",
+		quantity: 2,
+		price: 103,
+		tradeId: 101,
+		timestamp: -1,
+		orderId: -1,
+	},
+	{
+		type: "limit",
+		side: "ask",
+		quantity: 3,
+		price: 101,
+		tradeId: 102,
+		timestamp: -1,
+		orderId: -1,
+	},
+	{
+		type: "limit",
+		side: "ask",
+		quantity: 4,
+		price: 101,
+		tradeId: 103,
+		timestamp: -1,
+		orderId: -1,
+	},
 ];
 
 for (const order of limitOrders) {
