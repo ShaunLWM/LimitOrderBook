@@ -1,4 +1,4 @@
-type Quote = {
+interface Quote {
 	type: "limit" | "market",
 	side: "ask" | "bid",
 	quantity: number,
@@ -9,7 +9,7 @@ type Quote = {
 	type?: string;
 }
 
-type TransactionRecord = {
+interface TransactionRecord {
 	timestamp: number,
 	price: number,
 	quantity: number,
