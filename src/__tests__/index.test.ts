@@ -1,6 +1,5 @@
 import OrderBook from "../model/OrderBook";
 
-
 const EXTERNAL_ORDERS: Quote[] = [
 	{
 		type: "limit",
@@ -53,14 +52,14 @@ describe("LimitOrderBook", () => {
 		}
 	});
 
-	it("Should properly show the best and worst bid and ask", () => {
+	it("Should properly show the best and worst Bids and Asks", () => {
 		expect(orderBook.getBestBid()).toBe(95);
 		expect(orderBook.getWorstBid()).toBe(95);
 		expect(orderBook.getBestAsk()).toBe(105);
 		expect(orderBook.getWorstAsk()).toBe(105);
 	});
 
-	it("Should successfully add 1 normal limit order each for bid and ask", () => {
+	it("Should successfully add 1 normal limit order each for Bids and Asks", () => {
 		for (const order of EXTERNAL_ORDERS) {
 			orderBook.processOrder(order, false);
 		}
@@ -71,7 +70,39 @@ describe("LimitOrderBook", () => {
 		expect(orderBook.getWorstAsk()).toBe(105);
 	});
 
-	it("Should successfully purchase 2 quantity of 102", () => {
+	it("Should successfully purchase 1 quantity of 102", () => {
+		for (const order of EXTERNAL_ORDERS) {
+			orderBook.processOrder(order, false);
+		}
+
+		const { trades } = orderBook.processOrder({
+			type: "limit",
+			side: "bid",
+			quantity: 1,
+			price: 102,
+			tradeId: 110,
+			timestamp: -1,
+			orderId: -1,
+		}, false);
+
+		if (!trades) {
+			throw new Error("Shouldn't crash"); 1
+		}
+
+		expect(trades.length).toBe(1);
+
+		expect(trades[0].price).toBe(102);
+		expect(trades[0].quantity).toBe(1);
+		expect(trades[0].party1![0]).toBe(4); // bought from tradeId 4
+		expect(trades[0].party1![3]).toBe(1); // bought 1 item
+
+		expect(orderBook.getBestBid()).toBe(98);
+		expect(orderBook.getWorstBid()).toBe(95);
+		expect(orderBook.getBestAsk()).toBe(102);
+		expect(orderBook.getWorstAsk()).toBe(105);
+	});
+
+	it("Should successfully purchase full 2 quantities of 102", () => {
 		for (const order of EXTERNAL_ORDERS) {
 			orderBook.processOrder(order, false);
 		}
@@ -86,10 +117,11 @@ describe("LimitOrderBook", () => {
 			orderId: -1,
 		}, false);
 
-		expect(trades!.length).toBe(1);
 		if (!trades) {
 			throw new Error("Shouldn't crash"); 1
 		}
+
+		expect(trades.length).toBe(1);
 
 		expect(trades[0].price).toBe(102);
 		expect(trades[0].quantity).toBe(2);
@@ -100,5 +132,111 @@ describe("LimitOrderBook", () => {
 		expect(orderBook.getWorstBid()).toBe(95);
 		expect(orderBook.getBestAsk()).toBe(105);
 		expect(orderBook.getWorstAsk()).toBe(105);
+	});
+
+	it("Should successfully overbuy 1 normal limit order and add remaining to Bids", () => {
+		for (const order of EXTERNAL_ORDERS) {
+			orderBook.processOrder(order, false);
+		}
+
+		const { trades } = orderBook.processOrder({
+			type: "limit",
+			side: "bid",
+			quantity: 6,
+			price: 102,
+			tradeId: 110,
+			timestamp: -1,
+			orderId: -1,
+		}, false);
+
+		if (!trades) {
+			throw new Error("Shouldn't crash");
+		}
+
+		expect(trades.length).toBe(1);
+
+		expect(trades[0].price).toBe(102);
+		expect(trades[0].quantity).toBe(2);
+		expect(trades[0].party1![0]).toBe(4); // bought from tradeId 4
+		expect(trades[0].party1![3]).toBe(2); // bought 2 item
+
+		expect(orderBook.getBestBid()).toBe(102); // remaining 4 bids from the latest transactions
+		expect(orderBook.getWorstBid()).toBe(95);
+		expect(orderBook.getBestAsk()).toBe(105);
+		expect(orderBook.getWorstAsk()).toBe(105);
+	});
+
+	it("Should successfully overbuy the full Asks", () => {
+		for (const order of EXTERNAL_ORDERS) {
+			orderBook.processOrder(order, false);
+		}
+
+		const { trades } = orderBook.processOrder({
+			type: "limit",
+			side: "bid",
+			quantity: 4,
+			price: 120,
+			tradeId: 110,
+			timestamp: -1,
+			orderId: -1,
+		}, false);
+
+		if (!trades) {
+			throw new Error("Shouldn't crash");
+		}
+
+		expect(trades.length).toBe(2);
+
+		expect(trades[0].price).toBe(102);
+		expect(trades[0].quantity).toBe(2);
+		expect(trades[0].party1![0]).toBe(4); // bought from tradeId 4
+		expect(trades[0].party1![3]).toBe(2); // bought 2 item
+
+		expect(trades[1].price).toBe(105);
+		expect(trades[1].quantity).toBe(2);
+		expect(trades[1].party1![0]).toBe(1); // bought from tradeId 1
+		expect(trades[1].party1![3]).toBe(2); // bought 2 item
+
+		expect(orderBook.getBestBid()).toBe(98); 
+		expect(orderBook.getWorstBid()).toBe(95);
+		expect(orderBook.getBestAsk()).toBe(null);
+		expect(orderBook.getWorstAsk()).toBe(null);
+	});
+
+	it("Should successfully overbuy the full Ask orders and add remaining to Bids", () => {
+		for (const order of EXTERNAL_ORDERS) {
+			orderBook.processOrder(order, false);
+		}
+
+		const { trades } = orderBook.processOrder({
+			type: "limit",
+			side: "bid",
+			quantity: 6,
+			price: 120,
+			tradeId: 110,
+			timestamp: -1,
+			orderId: -1,
+		}, false);
+
+		if (!trades) {
+			throw new Error("Shouldn't crash");
+		}
+
+		expect(trades.length).toBe(2);
+
+		expect(trades[0].price).toBe(102);
+		expect(trades[0].quantity).toBe(2);
+		expect(trades[0].party1![0]).toBe(4); // bought from tradeId 4
+		expect(trades[0].party1![3]).toBe(2); // bought 2 item
+
+		expect(trades[1].price).toBe(105);
+		expect(trades[1].quantity).toBe(2);
+		expect(trades[1].party1![0]).toBe(1); // bought from tradeId 1
+		expect(trades[1].party1![3]).toBe(2); // bought 2 item
+
+		expect(orderBook.getBestBid()).toBe(120); 
+		expect(orderBook.getWorstBid()).toBe(95);
+		expect(orderBook.getBestAsk()).toBe(null);
+		expect(orderBook.getWorstAsk()).toBe(null);
 	});
 });
