@@ -3,6 +3,10 @@ import OrderList from "./OrderList";
 import Order from "./Order";
 import { EventEmitter2 } from "eventemitter2";
 
+interface Props {
+	sortBy?: "asc" | "desc";
+}
+
 export default class OrderTree extends EventEmitter2 {
 	priceMap: SortedDictionary<number, OrderList>;
 	prices: Array<number>;
@@ -10,8 +14,10 @@ export default class OrderTree extends EventEmitter2 {
 	numOrders: number;
 	depth: number;
 	volume: number;
+	sortBy: "asc" | "desc";
 
-	constructor() {
+	constructor(props: Props) {
+		const { sortBy = "asc" } = props;
 		super({ wildcard: true, delimiter: ":" });
 		this.priceMap = new SortedDictionary<number, OrderList>();
 		this.prices = this.priceMap.getKeys();
@@ -19,6 +25,7 @@ export default class OrderTree extends EventEmitter2 {
 		this.numOrders = 0;
 		this.depth = 0;
 		this.volume = 0;
+		this.sortBy = sortBy;
 	}
 
 	get length(): number {
@@ -26,7 +33,10 @@ export default class OrderTree extends EventEmitter2 {
 	}
 
 	getPriceList(price: number): OrderList | null {
-		if (price === null) return null;
+		if (price === null) {
+			return null;
+		}
+
 		return this.priceMap.get(price);
 	}
 
@@ -35,18 +45,25 @@ export default class OrderTree extends EventEmitter2 {
 	}
 
 	updatePriceKeys() {
+		if (this.sortBy === "asc") {
+			this.priceMap.sortByKey();
+		} else {
+			this.priceMap.sortByKey((a, b) => b - a);
+		}
 		this.prices = this.priceMap.getKeys();
 	}
 
 	createPrice(price: number) {
 		this.depth += 1;
 		this.priceMap.set(price, new OrderList());
+		this.updatePriceKeys();
 		this.emit("price:new", { price });
 	}
 
 	removePrice(price: number) {
 		this.depth -= 1;
 		this.priceMap.remove(price);
+		this.updatePriceKeys();
 		this.emit("price:remove", { price });
 	}
 
@@ -66,7 +83,7 @@ export default class OrderTree extends EventEmitter2 {
 		if (this.orderExists(quote)) this.removeOrderById(quote.orderId);
 		this.numOrders += 1;
 		if (!this.priceMap.containsKey(quote.price)) this.createPrice(quote.price);
-		const order = new Order((quote as unknown) as Quote, this.priceMap.get(quote.price)); // WARN
+		const order = new Order(quote, this.priceMap.get(quote.price));
 		this.priceMap.get(order.price).appendOrder(order);
 		this.orderMap[order.orderId] = order;
 		this.volume += order.quantity;
@@ -76,14 +93,19 @@ export default class OrderTree extends EventEmitter2 {
 
 	updateOrder(orderUpdate: Quote) {
 		const order = this.orderMap[orderUpdate.orderId];
-		const originalQuantity = order.quantity;
+		const { quantity: originalQuantity } = order;
 		if (orderUpdate.price !== order.price) {
 			// Price changed. Remove order and update tree.
 			const orderList = this.priceMap.get(order.price);
 			orderList.removeOrder(order);
-			if (orderList.length === 0) this.removePrice(order.price);
+			if (orderList.length === 0) {
+				this.removePrice(order.price);
+			}
 			this.insertOrder(orderUpdate);
-		} else order.updateQuantity(orderUpdate.quantity, orderUpdate.timestamp);
+		} else {
+			order.updateQuantity(orderUpdate.quantity, orderUpdate.timestamp);
+		}
+
 		this.volume += order.quantity - originalQuantity;
 		this.updatePriceKeys();
 		this.emit("order:update", orderUpdate);
@@ -105,27 +127,38 @@ export default class OrderTree extends EventEmitter2 {
 	}
 
 	maxPrice() {
-		if (this.depth > 0) return this.prices[this.prices.length - 1];
-		return null;
-	}
-
-	minPrice() {
 		if (this.depth > 0) return this.prices[0];
 		return null;
 	}
 
+	minPrice() {
+		if (this.depth > 0) return this.prices[this.prices.length - 1];
+		return null;
+	}
+
 	maxPriceList() {
-		if (this.depth > 0) return this.getPriceList(this.maxPrice()!);
+		const maxPrice = this.maxPrice();
+		if (this.depth > 0 && maxPrice !== null) {
+			return this.getPriceList(maxPrice);
+		}
+
 		return null;
 	}
 
 	minPriceList() {
-		if (this.depth > 0) return this.getPriceList(this.minPrice()!);
+		const minPrice = this.minPrice();
+		if (this.depth > 0 && minPrice !== null) {
+			return this.getPriceList(minPrice);
+		}
+
 		return null;
 	}
 
 	getPrice(price: number) {
-		if (this.depth > 0) return this.getPriceList(price);
+		if (this.depth > 0) {
+			return this.getPriceList(price);
+		}
+
 		return null;
 	}
 }
