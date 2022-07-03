@@ -16,7 +16,8 @@
 		"watch": "tsc -w",
 		"build": "tsc",
 		"prepublish": "npm run copy && tsc",
-		"copy": "RMDIR /Q/S dist"
+		"copy": "RMDIR /Q/S dist",
+		"test": "jest"
 	},
 	"dependencies": {
 		"denque": "^2.0.1",
@@ -24,7 +25,11 @@
 		"yaca": "^1.2.3"
 	},
 	"devDependencies": {
+		"@types/jest": "^28.1.4",
 		"@types/node": "^18.0.0",
+		"jest": "^28.1.2",
+		"ts-jest": "^28.0.5",
+		"ts-node": "^10.8.2",
 		"typescript": "^4.7.4"
 	},
 	"keywords": [

@@ -1,4 +1,4 @@
-import OrderBook from "../model/OrderBook";
+import OrderBook from "./model/OrderBook";
 
 function assert<T>(title: string, current: T, expected: T) {
 	if (current !== expected) {
@@ -123,10 +123,10 @@ const limitOrders: Array<Quote> = [
  * 103 x2 (101)
  * 101 x1 (100), 101 x3 (102), 101 x4 (103)
  * ----Bid ----
- * 97 x8 (107),
- * 98 x6 (105),
- * 99 x5 (104), 99 * 7 (106),
  * 100 x3 (100),
+ * 99 x5 (104), 99 * 7 (106),
+ * 98 x6 (105),
+ * 97 x8 (107),
  * */
 
 for (const order of limitOrders) {
@@ -134,8 +134,8 @@ for (const order of limitOrders) {
 }
 
 console.log(`${orderBook}`);
-assert('Best bid', orderBook.getBestBid(), 97);
-assert('Worst bid', orderBook.getWorstBid(), 100)
+assert('Best bid', orderBook.getBestBid(), 100);
+assert('Worst bid', orderBook.getWorstBid(), 97)
 assert('Best ask', orderBook.getBestAsk(), 101)
 assert('Worst ask', orderBook.getWorstAsk(), 103)
 
@@ -174,8 +174,8 @@ assert('3rd Transaction (quantity)', trades[2].party1![3], 4); // bought 4 from 
 console.log(`\n\n----------ORDER BOOK RESULT-------------`);
 console.log(`${orderBook}`);
 
-assert('Best bid (no change)', orderBook.getBestBid(), 97);
-assert('Worst bid (no change)', orderBook.getWorstBid(), 100)
+assert('Best bid (no change)', orderBook.getBestBid(), 100);
+assert('Worst bid (no change)', orderBook.getWorstBid(), 97)
 assert('Best ask', orderBook.getBestAsk(), 102) // bought up all 101, so left 102
 assert('Worst ask', orderBook.getWorstAsk(), 103)
 
