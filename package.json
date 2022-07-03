@@ -15,8 +15,8 @@
 		"start": "yarn watch",
 		"watch": "tsc -w",
 		"build": "tsc",
-		"prepublish": "npm run copy && tsc",
-		"copy": "RMDIR /Q/S dist",
+		"prepublishOnly": "npm run copy && tsc",
+		"copy": "rm -rf dist",
 		"test": "jest"
 	},
 	"dependencies": {
