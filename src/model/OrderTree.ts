@@ -54,8 +54,12 @@ export default class OrderTree extends EventEmitter2 {
 		return this.priceMap.containsKey(price);
 	}
 
-	orderExists(order: Quote) {
-		return typeof this.orderMap[order.orderId] !== "undefined";
+	orderExists(order: Quote | number) {
+		if (typeof order === "number") {
+			return this.orderMap[order] !== undefined;
+		}
+
+		return this.orderMap[order.orderId] !== undefined;
 	}
 
 	insertOrder(quote: Quote) {

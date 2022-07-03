@@ -223,24 +223,53 @@ export default class OrderBook extends EventEmitter2 {
 		};
 	}
 
-	cancelOrder(side: "ask" | "bid", orderId: number, orderUpdate: Quote, time: number | null = null) {
+	cancelOrder(side: "ask" | "bid", orderId: number, time: number | null = null) {
 		if (time) {
 			this.time = time;
 		} else {
 			this.updateTime();
 		}
-		
-		side = orderUpdate.side;
+
+		switch (side) {
+			case "bid":
+				if (this.bids.orderExists(orderId)) {
+					this.bids.removeOrderById(orderId);
+				}
+				break;
+
+			case "ask":
+				if (this.asks.orderExists(orderId)) {
+					this.asks.removeOrderById(orderId);
+				}
+				break;
+
+			default:
+				throw new Error("cancelOrder given neither 'bid' nor 'ask'")
+		}
+	}
+
+	modifyOrder(orderId: number, orderUpdate: Quote, time: number | null = null) {
+		if (time) {
+			this.time = time;
+		} else {
+			this.updateTime();
+		}
+
+		const { side } = orderUpdate;
 		orderUpdate.orderId = orderId;
 		orderUpdate.timestamp = this.time;
 
 		switch (side) {
 			case "bid":
-				if (this.bids.orderExists(orderUpdate)) this.bids.updateOrder(orderUpdate);
+				if (this.bids.orderExists(orderUpdate)) {
+					this.bids.updateOrder(orderUpdate);
+				}
 				break;
 
 			case "ask":
-				if (this.asks.orderExists(orderUpdate)) this.asks.updateOrder(orderUpdate);
+				if (this.asks.orderExists(orderUpdate)) {
+					this.asks.updateOrder(orderUpdate);
+				}
 				break;
 
 			default:
