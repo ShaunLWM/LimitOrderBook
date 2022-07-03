@@ -1,12 +1,4 @@
 import OrderBook from "../model/OrderBook";
-import OrderList from "../model/OrderList";
-import { SortedDictionary } from "yaca";
-
-// const priceMap = new SortedDictionary<number, OrderList>();
-// priceMap.set(1, new OrderList("1"));
-// priceMap.set(2, new OrderList("2"));
-// console.log(priceMap.get(1));
-// process.exit(0);
 
 const orderBook = new OrderBook();
 orderBook.on("transaction:new", (data) => {

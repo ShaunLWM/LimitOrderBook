@@ -39,8 +39,13 @@ export default class OrderBook extends EventEmitter2 {
 		const orderType = quote.type;
 		let orderInBook = null;
 		let trades = null;
-		if (fromData) this.time = quote.timestamp;
-		else this.updateTime();
+
+		if (fromData) {
+			this.time = quote.timestamp;
+		} else {
+			this.updateTime();
+		}
+
 		quote.timestamp = this.time;
 		if (quote.quantity <= 0) {
 			return {
@@ -49,10 +54,14 @@ export default class OrderBook extends EventEmitter2 {
 			};
 		}
 
-		if (!fromData) this.nextOrderId += 1;
-		if (orderType === "market") trades = this.processMarketOrder(quote);
-		else if (orderType === "limit") {
-			let result = this.processLimitOrder(quote, fromData);
+		if (!fromData) {
+			this.nextOrderId += 1;
+		}
+
+		if (orderType === "market") {
+			trades = this.processMarketOrder(quote);
+		} else if (orderType === "limit") {
+			const result = this.processLimitOrder(quote, fromData);
 			trades = result.trades;
 			orderInBook = result.orderInBook;
 		} else {
@@ -134,7 +143,7 @@ export default class OrderBook extends EventEmitter2 {
 	processMarketOrder(quote: Quote) {
 		const trades = [];
 		let quantityToTrade = quote.quantity;
-		const side = quote.side;
+		const { side } = quote;
 		switch (side) {
 			case "bid":
 				while (quantityToTrade > 0 && this.asks) {
@@ -163,8 +172,7 @@ export default class OrderBook extends EventEmitter2 {
 		let orderInBook = null;
 		const trades: Array<TransactionRecord> = [];
 		let quantityToTrade = quote.quantity;
-		const side = quote.side;
-		const price = quote.price;
+		const { side, price } = quote;
 
 		switch (side) {
 			case "bid":
@@ -215,11 +223,13 @@ export default class OrderBook extends EventEmitter2 {
 		};
 	}
 
-	cancelOrder(side: "ask" | "bid", orderId: number, orderUpdate: Quote, time = null) {
-		if (time) this.time = time!;
-		// WARN
-		else this.updateTime();
-
+	cancelOrder(side: "ask" | "bid", orderId: number, orderUpdate: Quote, time: number | null = null) {
+		if (time) {
+			this.time = time;
+		} else {
+			this.updateTime();
+		}
+		
 		side = orderUpdate.side;
 		orderUpdate.orderId = orderId;
 		orderUpdate.timestamp = this.time;

@@ -27,14 +27,13 @@ export default class OrderList {
 			order.nextOrder = null;
 			order.prevOrder = null;
 			this.headOrder = order;
-			this.tailOrder = order;
 		} else {
 			order.prevOrder = this.tailOrder;
 			order.nextOrder = null;
 			this.tailOrder!.nextOrder = order;
-			this.tailOrder = order;
 		}
 
+		this.tailOrder = order;
 		this.length += 1;
 		this.volume += order.quantity;
 	}
@@ -43,8 +42,7 @@ export default class OrderList {
 		this.volume -= order.quantity;
 		this.length -= 1;
 		if (this.length === 0) return;
-		const nextOrder = order.nextOrder;
-		const prevOrder = order.prevOrder;
+		const { nextOrder, prevOrder } = order;
 		if (nextOrder && prevOrder) {
 			nextOrder.prevOrder = prevOrder;
 			prevOrder.nextOrder = nextOrder;

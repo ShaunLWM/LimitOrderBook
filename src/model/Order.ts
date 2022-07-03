@@ -24,11 +24,7 @@ export default class Order implements Quote {
 	}
 
 	updateQuantity(quantity: number, timestamp: number) {
-		if (
-			quantity > this.quantity &&
-			this.orderList.tailOrder !== null &&
-			this.orderList.tailOrder.toString() !== this.toString()
-		) {
+		if (quantity > this.quantity && this.orderList.tailOrder !== null && this.orderList.tailOrder.toString() !== this.toString()) {
 			this.orderList.moveToTail(this);
 		}
 

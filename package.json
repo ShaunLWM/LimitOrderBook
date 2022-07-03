@@ -12,19 +12,20 @@
 		"dist"
 	],
 	"scripts": {
+		"start": "yarn watch",
+		"watch": "tsc -w",
 		"build": "tsc",
 		"prepublish": "npm run copy && tsc",
 		"copy": "RMDIR /Q/S dist"
 	},
 	"dependencies": {
-		"denque": "^1.5.0",
-		"eventemitter2": "^6.4.4",
+		"denque": "^2.0.1",
+		"eventemitter2": "^6.4.6",
 		"yaca": "^1.2.3"
 	},
 	"devDependencies": {
-		"@types/node": "^15.0.2",
-		"prettier": "^2.2.1",
-		"typescript": "^4.2.4"
+		"@types/node": "^18.0.0",
+		"typescript": "^4.7.4"
 	},
 	"keywords": [
 		"limitorderbook",
