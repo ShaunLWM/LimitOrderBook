@@ -1,20 +1,28 @@
 import OrderBook from "../model/OrderBook";
 
+function assert<T>(title: string, current: T, expected: T) {
+	if (current !== expected) {
+		return console.log(`[❌ ${title}] Expected ${expected}, but got ${current}`);
+	}
+
+	return console.log(`[✅ ${title}] ${current} === ${expected}`);
+}
+
 const orderBook = new OrderBook();
-orderBook.on("transaction:new", (data) => {
-	console.log(`transaction`);
-	console.log(data);
-});
+// orderBook.on("transaction:new", (data) => {
+// 	console.log(`transaction`);
+// 	console.log(data);
+// });
 
-orderBook.on("order:new", (data) => {
-	console.log(`new order`);
-	console.log(data);
-});
+// orderBook.on("order:new", (data) => {
+// 	console.log(`new order`);
+// 	console.log(data);
+// });
 
-orderBook.on("price:new", (data) => {
-	console.log(`new price`);
-	console.log(data);
-});
+// orderBook.on("price:new", (data) => {
+// 	console.log(`new price`);
+// 	console.log(data);
+// });
 
 const limitOrders: Array<Quote> = [
 	{
@@ -23,6 +31,15 @@ const limitOrders: Array<Quote> = [
 		quantity: 5,
 		price: 99,
 		tradeId: 104,
+		timestamp: -1,
+		orderId: -1,
+	},
+	{
+		type: "limit",
+		side: "bid",
+		quantity: 3,
+		price: 100,
+		tradeId: 100,
 		timestamp: -1,
 		orderId: -1,
 	},
@@ -90,20 +107,42 @@ const limitOrders: Array<Quote> = [
 		timestamp: -1,
 		orderId: -1,
 	},
+	{
+		type: "limit",
+		side: "ask",
+		quantity: 1,
+		price: 102,
+		tradeId: 104,
+		timestamp: -1,
+		orderId: -1,
+	},
 ];
 
+/**
+ * ----Ask ----
+ * 103 x2 (101)
+ * 101 x1 (100), 101 x3 (102), 101 x4 (103)
+ * ----Bid ----
+ * 97 x8 (107),
+ * 98 x6 (105),
+ * 99 x5 (104), 99 * 7 (106),
+ * 100 x3 (100),
+ * */
+
 for (const order of limitOrders) {
-	const result = orderBook.processOrder(order, false);
-	//console.log(result);
-	//console.log(`		+++ 			`);
+	orderBook.processOrder(order, false);
 }
 
 console.log(`${orderBook}`);
+assert('Best bid', orderBook.getBestBid(), 97);
+assert('Worst bid', orderBook.getWorstBid(), 100)
+assert('Best ask', orderBook.getBestAsk(), 101)
+assert('Worst ask', orderBook.getWorstAsk(), 103)
 
 const crossLimitOrder: Quote = {
 	type: "limit",
 	side: "bid",
-	quantity: 2,
+	quantity: 8,
 	price: 102,
 	tradeId: 109,
 	timestamp: -1,
@@ -111,11 +150,36 @@ const crossLimitOrder: Quote = {
 };
 
 console.log(`----------BUY ORDER SAMPLE (crossLimitOrder)-----------`);
-let result = orderBook.processOrder(crossLimitOrder, false);
-// console.log(result);
+let { trades } = orderBook.processOrder(crossLimitOrder, false);
+// console.log(trades);
 
-console.log(`----------ORDER BOOK RESULT-------------`);
+if (!trades) {
+	throw new Error('Impossible. There should be trade');
+}
+
+assert('Total transaction', trades.length, 3);
+
+assert('1st Transaction (price)', trades[0].price, 101);
+assert('1st Transaction (bought from)', trades[0].party1![0], 100);
+assert('1st Transaction (quantity)', trades[0].party1![3], 1); // bought 1 from tradeId 100
+
+assert('2nd Transaction (price)', trades[1].price, 101);
+assert('2nd Transaction (bought from)', trades[1].party1![0], 102);
+assert('2nd Transaction (quantity)', trades[1].party1![3], 3); // bought 3 from tradeId 102 since 100 only has 1
+
+assert('3rd Transaction (price)', trades[2].price, 101);
+assert('3rd Transaction (bought from)', trades[2].party1![0], 103);
+assert('3rd Transaction (quantity)', trades[2].party1![3], 4); // bought 4 from tradeId 102 and finished up price at 101
+
+console.log(`\n\n----------ORDER BOOK RESULT-------------`);
 console.log(`${orderBook}`);
+
+assert('Best bid (no change)', orderBook.getBestBid(), 97);
+assert('Worst bid (no change)', orderBook.getWorstBid(), 100)
+assert('Best ask', orderBook.getBestAsk(), 102) // bought up all 101, so left 102
+assert('Worst ask', orderBook.getWorstAsk(), 103)
+
+process.exit(0);
 
 const bigCrossingLimitOrder: Quote = {
 	type: "limit",
@@ -128,7 +192,7 @@ const bigCrossingLimitOrder: Quote = {
 };
 
 console.log(`----------BUY ORDER SAMPLE (bigCrossingLimitOrder)-----------`);
-result = orderBook.processOrder(bigCrossingLimitOrder, false);
+let result = orderBook.processOrder(bigCrossingLimitOrder, false);
 //console.log(result);
 console.log(`----------ORDER BOOK RESULT-------------`);
 console.log(`${orderBook}`);

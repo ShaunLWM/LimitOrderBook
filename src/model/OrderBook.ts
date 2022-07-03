@@ -16,8 +16,8 @@ export default class OrderBook extends EventEmitter2 {
 	constructor({ tickSize = 0.0001 }: { tickSize?: number } = {}) {
 		super({ wildcard: true, delimiter: ":" });
 		this.tape = new Denque<TransactionRecord>();
-		this.bids = new OrderTree();
-		this.asks = new OrderTree();
+		this.bids = new OrderTree({ sortBy: "asc" });
+		this.asks = new OrderTree({ sortBy: "desc" });
 		this.lastTick = null;
 		this.lastTimestamp = 0;
 		this.tickSize = tickSize;
@@ -122,10 +122,10 @@ export default class OrderBook extends EventEmitter2 {
 				};
 
 				if (side === "bid") {
-					transactionRecord["party1"] = [counterParty, "bid", headOrder.orderId, newBookQuantity];
+					transactionRecord["party1"] = [counterParty, "bid", headOrder.orderId, tradedQuantity];
 					transactionRecord["party2"] = [quote.tradeId, "ask", null, null];
 				} else {
-					transactionRecord["party1"] = [counterParty, "ask", headOrder.orderId, newBookQuantity];
+					transactionRecord["party1"] = [counterParty, "ask", headOrder.orderId, tradedQuantity];
 					transactionRecord["party2"] = [quote.tradeId, "bid", null, null];
 				}
 
@@ -314,15 +314,14 @@ export default class OrderBook extends EventEmitter2 {
 	}
 
 	toString() {
-		let str = "***Bids***\n";
-		if (this.bids && this.bids.length > 0) {
-			this.bids.priceMap.sortByKey((a, b) => b - a);
-			this.bids.priceMap.forEach((order) => (str += order.value.toString()));
-		}
-
-		str += "\n***Asks***\n";
+		let str = "\n***Asks***\n";
 		if (this.asks && this.asks.length > 0) {
 			this.asks.priceMap.forEach((order) => (str += order.value.toString()));
+		}
+
+		str += "\n***Bids***\n";
+		if (this.bids && this.bids.length > 0) {
+			this.bids.priceMap.forEach((order) => (str += order.value.toString()));
 		}
 
 		str += "\n***Transactions (first 10)***\n";
