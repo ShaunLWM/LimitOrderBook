@@ -16,8 +16,8 @@ export default class OrderBook extends EventEmitter2 {
 	constructor({ tickSize = 0.0001 }: { tickSize?: number } = {}) {
 		super({ wildcard: true, delimiter: ":" });
 		this.tape = new Denque<TransactionRecord>();
-		this.bids = new OrderTree({ sortBy: "asc" });
-		this.asks = new OrderTree({ sortBy: "desc" });
+		this.bids = new OrderTree();
+		this.asks = new OrderTree();
 		this.lastTick = null;
 		this.lastTimestamp = 0;
 		this.tickSize = tickSize;
@@ -314,12 +314,12 @@ export default class OrderBook extends EventEmitter2 {
 	}
 
 	toString() {
-		let str = "\n***Asks***\n";
+		let str = "\n*** Asks (btm small) ***\n";
 		if (this.asks && this.asks.length > 0) {
 			this.asks.priceMap.forEach((order) => (str += order.value.toString()));
 		}
 
-		str += "\n***Bids***\n";
+		str += "\n*** Bids (top big) ***\n";
 		if (this.bids && this.bids.length > 0) {
 			this.bids.priceMap.forEach((order) => (str += order.value.toString()));
 		}

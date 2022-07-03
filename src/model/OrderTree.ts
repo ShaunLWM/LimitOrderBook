@@ -3,10 +3,6 @@ import OrderList from "./OrderList";
 import Order from "./Order";
 import { EventEmitter2 } from "eventemitter2";
 
-interface Props {
-	sortBy?: "asc" | "desc";
-}
-
 export default class OrderTree extends EventEmitter2 {
 	priceMap: SortedDictionary<number, OrderList>;
 	prices: Array<number>;
@@ -14,10 +10,8 @@ export default class OrderTree extends EventEmitter2 {
 	numOrders: number;
 	depth: number;
 	volume: number;
-	sortBy: "asc" | "desc";
 
-	constructor(props: Props) {
-		const { sortBy = "asc" } = props;
+	constructor() {
 		super({ wildcard: true, delimiter: ":" });
 		this.priceMap = new SortedDictionary<number, OrderList>();
 		this.prices = this.priceMap.getKeys();
@@ -25,7 +19,6 @@ export default class OrderTree extends EventEmitter2 {
 		this.numOrders = 0;
 		this.depth = 0;
 		this.volume = 0;
-		this.sortBy = sortBy;
 	}
 
 	get length(): number {
@@ -45,11 +38,7 @@ export default class OrderTree extends EventEmitter2 {
 	}
 
 	updatePriceKeys() {
-		if (this.sortBy === "asc") {
-			this.priceMap.sortByKey();
-		} else {
-			this.priceMap.sortByKey((a, b) => b - a);
-		}
+		this.priceMap.sortByKey();
 		this.prices = this.priceMap.getKeys();
 	}
 
@@ -127,12 +116,12 @@ export default class OrderTree extends EventEmitter2 {
 	}
 
 	maxPrice() {
-		if (this.depth > 0) return this.prices[0];
+		if (this.depth > 0) return this.prices[this.prices.length - 1];
 		return null;
 	}
 
 	minPrice() {
-		if (this.depth > 0) return this.prices[this.prices.length - 1];
+		if (this.depth > 0) return this.prices[0];
 		return null;
 	}
 
