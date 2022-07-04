@@ -12,7 +12,7 @@ export default class OrderBook extends EventEmitter2 {
 	lastTimestamp: number;
 	tickSize: number;
 	time: number;
-	nextOrderId: number;
+	nextOrderId: string;
 
 	constructor({ tickSize = 0.0001 }: { tickSize?: number } = {}) {
 		super({ wildcard: true, delimiter: ":" });
@@ -23,7 +23,7 @@ export default class OrderBook extends EventEmitter2 {
 		this.lastTimestamp = 0;
 		this.tickSize = tickSize;
 		this.time = 0;
-		this.nextOrderId = 0;
+		this.nextOrderId = "";
 		this.setupListeners();
 	}
 
@@ -44,7 +44,7 @@ export default class OrderBook extends EventEmitter2 {
 		const quote: Quote = {
 			timestamp: getCurrentUnix(),
 			tradeId: getUniqueId(),
-			orderId: 0,
+			orderId: getUniqueId(),
 			...qte,
 		}
 
@@ -228,7 +228,7 @@ export default class OrderBook extends EventEmitter2 {
 		};
 	}
 
-	cancelOrder(side: "ask" | "bid", orderId: number, time: number | null = null) {
+	cancelOrder(side: "ask" | "bid", orderId: string, time: number | null = null) {
 		if (time) {
 			this.time = time;
 		} else {
@@ -253,7 +253,7 @@ export default class OrderBook extends EventEmitter2 {
 		}
 	}
 
-	modifyOrder(orderId: number, orderUpdate: Quote, time: number | null = null) {
+	modifyOrder(orderId: string, orderUpdate: Quote, time: number | null = null) {
 		if (time) {
 			this.time = time;
 		} else {

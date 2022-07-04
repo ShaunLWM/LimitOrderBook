@@ -5,7 +5,7 @@ export default class Order implements Quote {
 	timestamp: number;
 	quantity: number;
 	price: number;
-	orderId: number;
+	orderId: string;
 	tradeId: string;
 	side: "ask" | "bid";
 

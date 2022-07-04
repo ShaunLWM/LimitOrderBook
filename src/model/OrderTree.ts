@@ -6,7 +6,7 @@ import { EventEmitter2 } from "eventemitter2";
 export default class OrderTree extends EventEmitter2 {
 	priceMap: SortedDictionary<number, OrderList>;
 	prices: Array<number>;
-	orderMap: { [orderId: number]: Order };
+	orderMap: { [orderId: string]: Order };
 	numOrders: number;
 	depth: number;
 	volume: number;
@@ -60,8 +60,8 @@ export default class OrderTree extends EventEmitter2 {
 		return this.priceMap.containsKey(price);
 	}
 
-	orderExists(order: Quote | number) {
-		if (typeof order === "number") {
+	orderExists(order: Quote | string) {
+		if (typeof order === "string") {
 			return this.orderMap[order] !== undefined;
 		}
 
@@ -100,7 +100,7 @@ export default class OrderTree extends EventEmitter2 {
 		this.emit("order:update", orderUpdate);
 	}
 
-	removeOrderById(orderId: number) {
+	removeOrderById(orderId: string) {
 		this.numOrders -= 1;
 		const order = this.orderMap[orderId];
 		if (!order) throw new Error("Order does not exist");

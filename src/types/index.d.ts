@@ -4,7 +4,7 @@ interface Quote {
 	quantity: number;
 	price: number;
 	tradeId: string;
-	orderId: number;
+	orderId: string;
 	timestamp: number;
 }
 
@@ -15,6 +15,6 @@ interface TransactionRecord {
 	price: number;
 	quantity: number;
 	time: number;
-	party1?: [string, "bid" | "ask", number, number | null];
-	party2?: [string, "bid" | "ask", number | null, number | null];
+	party1?: [string, "bid" | "ask", string, number | null];
+	party2?: [string, "bid" | "ask", string | null, number | null];
 }

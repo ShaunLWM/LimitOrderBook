@@ -8,7 +8,7 @@ const EXTERNAL_ORDERS: Quote[] = [
 		price: 98,
 		tradeId: "3",
 		timestamp: -1,
-		orderId: -1,
+		orderId: "-1",
 	},
 	{
 		type: "limit",
@@ -17,7 +17,7 @@ const EXTERNAL_ORDERS: Quote[] = [
 		price: 102,
 		tradeId: "4",
 		timestamp: -1,
-		orderId: -1,
+		orderId: "-1",
 	}
 ]
 
@@ -34,7 +34,7 @@ describe("LimitOrderBook", () => {
 				price: 105,
 				tradeId: "1",
 				timestamp: -1,
-				orderId: -1,
+				orderId: "-1",
 			},
 			{
 				type: "limit",
@@ -43,7 +43,7 @@ describe("LimitOrderBook", () => {
 				price: 95,
 				tradeId: "2",
 				timestamp: -1,
-				orderId: -1,
+				orderId: "-1",
 			},
 		];
 
@@ -82,7 +82,7 @@ describe("LimitOrderBook", () => {
 			price: 102,
 			tradeId: "110",
 			timestamp: -1,
-			orderId: -1,
+			orderId: "-1",
 		}, false);
 
 		if (!trades) {
@@ -114,7 +114,7 @@ describe("LimitOrderBook", () => {
 			price: 102,
 			tradeId: "110",
 			timestamp: -1,
-			orderId: -1,
+			orderId: "-1",
 		}, false);
 
 		if (!trades) {
@@ -146,7 +146,7 @@ describe("LimitOrderBook", () => {
 			price: 102,
 			tradeId: "110",
 			timestamp: -1,
-			orderId: -1,
+			orderId: "-1",
 		}, false);
 
 		if (!trades) {
@@ -178,7 +178,7 @@ describe("LimitOrderBook", () => {
 			price: 120,
 			tradeId: "110",
 			timestamp: -1,
-			orderId: -1,
+			orderId: "-1",
 		}, false);
 
 		if (!trades) {
@@ -215,7 +215,7 @@ describe("LimitOrderBook", () => {
 			price: 120,
 			tradeId: "110",
 			timestamp: -1,
-			orderId: -1,
+			orderId: "-1",
 		}, false);
 
 		if (!trades) {
@@ -252,7 +252,7 @@ describe("LimitOrderBook", () => {
 			price: 98,
 			tradeId: "110",
 			timestamp: -1,
-			orderId: -1,
+			orderId: "-1",
 		}, false);
 
 		if (!trades) {
@@ -284,7 +284,7 @@ describe("LimitOrderBook", () => {
 			price: 98,
 			tradeId: "110",
 			timestamp: -1,
-			orderId: -1,
+			orderId: "-1",
 		}, false);
 
 		if (!trades) {
@@ -316,7 +316,7 @@ describe("LimitOrderBook", () => {
 			price: 98,
 			tradeId: "110",
 			timestamp: -1,
-			orderId: -1,
+			orderId: "-1",
 		}, false);
 
 		if (!trades) {
@@ -348,7 +348,7 @@ describe("LimitOrderBook", () => {
 			price: 90,
 			tradeId: "110",
 			timestamp: -1,
-			orderId: -1,
+			orderId: "-1",
 		}, false);
 
 		if (!trades) {
@@ -385,7 +385,7 @@ describe("LimitOrderBook", () => {
 			price: 90,
 			tradeId: "110",
 			timestamp: -1,
-			orderId: -1,
+			orderId: "-1",
 		}, false);
 
 		if (!trades) {
