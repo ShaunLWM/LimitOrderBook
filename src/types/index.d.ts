@@ -3,17 +3,18 @@ interface Quote {
 	side: "ask" | "bid";
 	quantity: number;
 	price: number;
-	tradeId: number;
+	tradeId: string;
 	orderId: number;
 	timestamp: number;
-	type?: string;
 }
+
+type MixedQuote = Quote | Pick<Quote, "type" | "side" | "quantity" | "price">
 
 interface TransactionRecord {
 	timestamp: number;
 	price: number;
 	quantity: number;
 	time: number;
-	party1?: [number, "bid" | "ask", number, number | null];
-	party2?: [number, "bid" | "ask", number | null, number | null];
+	party1?: [string, "bid" | "ask", number, number | null];
+	party2?: [string, "bid" | "ask", number | null, number | null];
 }

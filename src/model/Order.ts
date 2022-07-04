@@ -1,11 +1,12 @@
 import OrderList from "./OrderList";
 
 export default class Order implements Quote {
+	type: "limit" | "market";
 	timestamp: number;
 	quantity: number;
 	price: number;
 	orderId: number;
-	tradeId: number;
+	tradeId: string;
 	side: "ask" | "bid";
 
 	nextOrder: Order | null = null;
@@ -21,6 +22,7 @@ export default class Order implements Quote {
 		this.tradeId = quote.tradeId;
 		this.orderList = orderList;
 		this.side = quote.side;
+		this.type = quote.type;
 	}
 
 	updateQuantity(quantity: number, timestamp: number) {

@@ -1,7 +1,8 @@
 import Denque from "denque";
-import OrderTree from "./OrderTree";
-import OrderList from "./OrderList";
 import { EventEmitter2 } from "eventemitter2";
+import { getCurrentUnix, getUniqueId } from "../lib/Helper";
+import OrderList from "./OrderList";
+import OrderTree from "./OrderTree";
 
 export default class OrderBook extends EventEmitter2 {
 	tape: Denque;
@@ -35,10 +36,17 @@ export default class OrderBook extends EventEmitter2 {
 		this.time += 1;
 	}
 
-	processOrder(quote: Quote, fromData: boolean) {
-		const orderType = quote.type;
+	processOrder(qte: MixedQuote, fromData: boolean) {
+		const { type: orderType } = qte;
 		let orderInBook = null;
 		let trades = null;
+
+		const quote: Quote = {
+			timestamp: getCurrentUnix(),
+			tradeId: getUniqueId(),
+			orderId: 0,
+			...qte,
+		}
 
 		if (fromData) {
 			this.time = quote.timestamp;
@@ -48,10 +56,7 @@ export default class OrderBook extends EventEmitter2 {
 
 		quote.timestamp = this.time;
 		if (quote.quantity <= 0) {
-			return {
-				trades,
-				orderInBook,
-			};
+			throw new Error("quantity must be greater than 0");
 		}
 
 		if (!fromData) {
