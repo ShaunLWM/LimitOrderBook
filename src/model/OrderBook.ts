@@ -12,7 +12,6 @@ export default class OrderBook extends EventEmitter2 {
 	lastTimestamp: number;
 	tickSize: number;
 	time: number;
-	nextOrderId: string;
 
 	constructor({ tickSize = 0.0001 }: { tickSize?: number } = {}) {
 		super({ wildcard: true, delimiter: ":" });
@@ -23,7 +22,6 @@ export default class OrderBook extends EventEmitter2 {
 		this.lastTimestamp = 0;
 		this.tickSize = tickSize;
 		this.time = 0;
-		this.nextOrderId = "";
 		this.setupListeners();
 	}
 
@@ -36,37 +34,28 @@ export default class OrderBook extends EventEmitter2 {
 		this.time += 1;
 	}
 
-	processOrder(qte: MixedQuote, fromData: boolean) {
+	processOrder(qte: MixedQuote) {
 		const { type: orderType } = qte;
 		let orderInBook = null;
 		let trades = null;
 
 		const quote: Quote = {
 			timestamp: getCurrentUnix(),
-			tradeId: getUniqueId(),
 			orderId: getUniqueId(),
 			...qte,
 		}
 
-		if (fromData) {
-			this.time = quote.timestamp;
-		} else {
-			this.updateTime();
-		}
-
+		this.updateTime();
 		quote.timestamp = this.time;
+
 		if (quote.quantity <= 0) {
 			throw new Error("quantity must be greater than 0");
-		}
-
-		if (!fromData) {
-			this.nextOrderId += 1;
 		}
 
 		if (orderType === "market") {
 			trades = this.processMarketOrder(quote);
 		} else if (orderType === "limit") {
-			const result = this.processLimitOrder(quote, fromData);
+			const result = this.processLimitOrder(quote);
 			trades = result.trades;
 			orderInBook = result.orderInBook;
 		} else {
@@ -86,7 +75,7 @@ export default class OrderBook extends EventEmitter2 {
 			const headOrder = orderList.getHeadOrder();
 			if (headOrder) {
 				const tradedPrice = headOrder.price;
-				const counterParty = headOrder.tradeId;
+				const counterParty = headOrder.orderId;
 				let newBookQuantity = null;
 				let tradedQuantity = null;
 
@@ -111,15 +100,19 @@ export default class OrderBook extends EventEmitter2 {
 					quantityToTrade -= tradedQuantity;
 				}
 
+				const txId = getUniqueId();
+
 				this.emit("transaction:new", {
-					time: this.time,
+					txId,
+					timestamp: this.time,
 					price: tradedPrice,
 					quantity: tradedQuantity,
 					from: counterParty,
-					to: quote.tradeId,
+					to: quote.orderId,
 				});
 
 				const transactionRecord: TransactionRecord = {
+					txId,
 					timestamp: this.time,
 					price: tradedPrice,
 					quantity: tradedQuantity,
@@ -128,10 +121,10 @@ export default class OrderBook extends EventEmitter2 {
 
 				if (side === "bid") {
 					transactionRecord["party1"] = [counterParty, "bid", headOrder.orderId, tradedQuantity];
-					transactionRecord["party2"] = [quote.tradeId, "ask", null, null];
+					transactionRecord["party2"] = [quote.orderId, "ask", null, null];
 				} else {
 					transactionRecord["party1"] = [counterParty, "ask", headOrder.orderId, tradedQuantity];
-					transactionRecord["party2"] = [quote.tradeId, "bid", null, null];
+					transactionRecord["party2"] = [quote.orderId, "bid", null, null];
 				}
 
 				this.tape.push(transactionRecord);
@@ -173,7 +166,7 @@ export default class OrderBook extends EventEmitter2 {
 		}
 	}
 
-	processLimitOrder(quote: Quote, fromData: boolean) {
+	processLimitOrder(quote: Quote) {
 		let orderInBook = null;
 		const trades: Array<TransactionRecord> = [];
 		let quantityToTrade = quote.quantity;
@@ -191,7 +184,8 @@ export default class OrderBook extends EventEmitter2 {
 				}
 
 				if (quantityToTrade > 0) {
-					if (!fromData) quote.orderId = this.nextOrderId;
+					// creating new order since we have not yet filled the order
+					quote.orderId = getUniqueId();
 					quote.quantity = quantityToTrade;
 					this.bids.insertOrder(quote);
 					orderInBook = quote;
@@ -210,7 +204,7 @@ export default class OrderBook extends EventEmitter2 {
 				}
 
 				if (quantityToTrade > 0) {
-					if (!fromData) quote.orderId = this.nextOrderId;
+					quote.orderId = getUniqueId();
 					quote.quantity = quantityToTrade;
 					this.asks.insertOrder(quote);
 					orderInBook = quote;

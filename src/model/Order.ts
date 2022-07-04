@@ -6,7 +6,6 @@ export default class Order implements Quote {
 	quantity: number;
 	price: number;
 	orderId: string;
-	tradeId: string;
 	side: "ask" | "bid";
 
 	nextOrder: Order | null = null;
@@ -19,7 +18,6 @@ export default class Order implements Quote {
 		this.quantity = quote.quantity;
 		this.price = quote.price;
 		this.orderId = quote.orderId;
-		this.tradeId = quote.tradeId;
 		this.orderList = orderList;
 		this.side = quote.side;
 		this.type = quote.type;
@@ -36,6 +34,6 @@ export default class Order implements Quote {
 	}
 
 	toString() {
-		return `${this.timestamp}-${this.quantity}-${this.price}-${this.orderId}-${this.tradeId}`;
+		return `${this.timestamp}-${this.quantity}-${this.price}-${this.orderId}`;
 	}
 }

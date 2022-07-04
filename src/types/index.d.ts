@@ -3,7 +3,6 @@ interface Quote {
 	side: "ask" | "bid";
 	quantity: number;
 	price: number;
-	tradeId: string;
 	orderId: string;
 	timestamp: number;
 }
@@ -15,6 +14,7 @@ interface TransactionRecord {
 	price: number;
 	quantity: number;
 	time: number;
+	txId: string;
 	party1?: [string, "bid" | "ask", string, number | null];
 	party2?: [string, "bid" | "ask", string | null, number | null];
 }
