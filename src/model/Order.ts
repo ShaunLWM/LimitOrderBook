@@ -2,7 +2,7 @@ import OrderList from "./OrderList";
 
 export default class Order implements Quote {
 	type: "limit" | "market";
-	timestamp: number;
+	time: number;
 	quantity: number;
 	price: number;
 	orderId: string;
@@ -14,7 +14,7 @@ export default class Order implements Quote {
 
 	constructor(quote: Quote, orderList: OrderList) {
 		if (!quote.side) throw new Error("Quote should have a side");
-		this.timestamp = quote.timestamp;
+		this.time = quote.time;
 		this.quantity = quote.quantity;
 		this.price = quote.price;
 		this.orderId = quote.orderId;
@@ -29,11 +29,11 @@ export default class Order implements Quote {
 		}
 
 		this.orderList.volume -= this.quantity - quantity;
-		this.timestamp = timestamp;
+		this.time = timestamp;
 		this.quantity = quantity;
 	}
 
 	toString() {
-		return `${this.timestamp}-${this.quantity}-${this.price}-${this.orderId}`;
+		return `${this.time}-${this.quantity}-${this.price}-${this.orderId}`;
 	}
 }

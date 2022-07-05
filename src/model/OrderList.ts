@@ -71,7 +71,7 @@ export default class OrderList {
 		let str = "";
 		for (const element of this) {
 			if (element === null) break;
-			str += `Order: [${element.orderId}] Price - ${element.price}, Quantity - ${element.quantity}, Timestamp - ${element.timestamp}\n`;
+			str += `Order: [${element.orderId}] Price - ${element.price}, Quantity - ${element.quantity}, Timestamp - ${element.time}\n`;
 		}
 
 		return str;

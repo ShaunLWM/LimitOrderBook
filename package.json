@@ -17,7 +17,8 @@
 		"build": "tsc",
 		"prepublishOnly": "npm run copy && tsc",
 		"copy": "rm -rf dist",
-		"test": "jest"
+		"test": "jest",
+		"test:coverage": "jest --coverage"
 	},
 	"dependencies": {
 		"denque": "^2.0.1",

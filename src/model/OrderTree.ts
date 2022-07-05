@@ -92,7 +92,7 @@ export default class OrderTree extends EventEmitter2 {
 			}
 			this.insertOrder(orderUpdate);
 		} else {
-			order.updateQuantity(orderUpdate.quantity, orderUpdate.timestamp);
+			order.updateQuantity(orderUpdate.quantity, orderUpdate.time);
 		}
 
 		this.volume += order.quantity - originalQuantity;

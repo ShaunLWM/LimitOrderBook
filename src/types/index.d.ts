@@ -4,7 +4,7 @@ interface Quote {
 	quantity: number;
 	price: number;
 	orderId: string;
-	timestamp: number;
+	time: number;
 }
 
 type SubmitQuote = Pick<Quote, "type" | "side" | "quantity" | "price">;
@@ -12,7 +12,6 @@ type SubmitQuote = Pick<Quote, "type" | "side" | "quantity" | "price">;
 type MixedQuote = Quote | SubmitQuote;
 
 interface TransactionRecord {
-	timestamp: number;
 	price: number;
 	quantity: number;
 	time: number;

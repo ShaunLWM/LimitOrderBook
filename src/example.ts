@@ -31,7 +31,7 @@ const limitOrders: Array<Quote> = [
 		quantity: 5,
 		price: 99,
 		tradeId: 104,
-		timestamp: -1,
+		time: -1,
 		orderId: -1,
 	},
 	{
@@ -40,7 +40,7 @@ const limitOrders: Array<Quote> = [
 		quantity: 3,
 		price: 100,
 		tradeId: 100,
-		timestamp: -1,
+		time: -1,
 		orderId: -1,
 	},
 	{
@@ -49,7 +49,7 @@ const limitOrders: Array<Quote> = [
 		quantity: 6,
 		price: 98,
 		tradeId: 105,
-		timestamp: -1,
+		time: -1,
 		orderId: -1,
 	},
 	{
@@ -58,7 +58,7 @@ const limitOrders: Array<Quote> = [
 		quantity: 7,
 		price: 99,
 		tradeId: 106,
-		timestamp: -1,
+		time: -1,
 		orderId: -1,
 	},
 	{
@@ -67,7 +67,7 @@ const limitOrders: Array<Quote> = [
 		quantity: 8,
 		price: 97,
 		tradeId: 107,
-		timestamp: -1,
+		time: -1,
 		orderId: -1,
 	},
 
@@ -77,7 +77,7 @@ const limitOrders: Array<Quote> = [
 		quantity: 1,
 		price: 101,
 		tradeId: 100,
-		timestamp: -1,
+		time: -1,
 		orderId: -1,
 	},
 	{
@@ -86,7 +86,7 @@ const limitOrders: Array<Quote> = [
 		quantity: 2,
 		price: 103,
 		tradeId: 101,
-		timestamp: -1,
+		time: -1,
 		orderId: -1,
 	},
 	{
@@ -95,7 +95,7 @@ const limitOrders: Array<Quote> = [
 		quantity: 3,
 		price: 101,
 		tradeId: 102,
-		timestamp: -1,
+		time: -1,
 		orderId: -1,
 	},
 	{
@@ -104,7 +104,7 @@ const limitOrders: Array<Quote> = [
 		quantity: 4,
 		price: 101,
 		tradeId: 103,
-		timestamp: -1,
+		time: -1,
 		orderId: -1,
 	},
 	{
@@ -113,7 +113,7 @@ const limitOrders: Array<Quote> = [
 		quantity: 1,
 		price: 102,
 		tradeId: 104,
-		timestamp: -1,
+		time: -1,
 		orderId: -1,
 	},
 ];
@@ -145,7 +145,7 @@ const crossLimitOrder: Quote = {
 	quantity: 8,
 	price: 102,
 	tradeId: 109,
-	timestamp: -1,
+	time: -1,
 	orderId: -1,
 };
 
@@ -187,7 +187,7 @@ const bigCrossingLimitOrder: Quote = {
 	quantity: 50,
 	price: 102,
 	tradeId: 110,
-	timestamp: -1,
+	time: -1,
 	orderId: -1,
 };
 
@@ -204,7 +204,7 @@ const marketOrder: Quote = {
 	tradeId: 111,
 	price: 0,
 	orderId: -1,
-	timestamp: -1,
+	time: -1,
 };
 
 console.log(`----------SELL ORDER SAMPLE (marketOrder)-----------`);

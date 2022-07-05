@@ -11,7 +11,6 @@ export default class OrderBook extends EventEmitter2 {
 	lastTick: number | null;
 	lastTimestamp: number;
 	tickSize: number;
-	time: number;
 
 	constructor({ tickSize = 0.0001 }: { tickSize?: number } = {}) {
 		super({ wildcard: true, delimiter: ":" });
@@ -21,17 +20,12 @@ export default class OrderBook extends EventEmitter2 {
 		this.lastTick = null;
 		this.lastTimestamp = 0;
 		this.tickSize = tickSize;
-		this.time = 0;
 		this.setupListeners();
 	}
 
 	setupListeners() {
 		this.bids.onAny((event, value) => this.emit(event, value));
 		this.asks.onAny((event, value) => this.emit(event, value));
-	}
-
-	updateTime() {
-		this.time += 1;
 	}
 
 	processOrder(qte: MixedQuote) {
@@ -44,12 +38,10 @@ export default class OrderBook extends EventEmitter2 {
 		}
 
 		const quote: Quote = {
-			timestamp: getCurrentUnix(),
+			time: getCurrentUnix(),
 			orderId: getUniqueId(),
 			...qte,
 		}
-
-		this.updateTime();
 
 		if (orderType === "market") {
 			trades = this.processMarketOrder(quote);
@@ -81,7 +73,7 @@ export default class OrderBook extends EventEmitter2 {
 				if (quantityToTrade < headOrder.quantity) {
 					tradedQuantity = quantityToTrade;
 					newBookQuantity = headOrder.quantity - quantityToTrade;
-					headOrder.updateQuantity(newBookQuantity, headOrder.timestamp);
+					headOrder.updateQuantity(newBookQuantity, headOrder.time);
 					quantityToTrade = 0;
 				} else if (quantityToTrade === headOrder.quantity) {
 					tradedQuantity = quantityToTrade;
@@ -99,24 +91,18 @@ export default class OrderBook extends EventEmitter2 {
 					quantityToTrade -= tradedQuantity;
 				}
 
-				const txId = getTxId();
-
-				this.emit("transaction:new", {
-					txId,
-					timestamp: this.time,
+				const tx = {
+					txId: getTxId(),
+					time: getCurrentUnix(),
 					price: tradedPrice,
 					quantity: tradedQuantity,
 					from: counterParty,
 					to: quote.orderId,
-				});
+				}
 
-				const transactionRecord: TransactionRecord = {
-					txId,
-					timestamp: this.time,
-					price: tradedPrice,
-					quantity: tradedQuantity,
-					time: this.time,
-				};
+				this.emit("transaction:new", tx);
+
+				const transactionRecord: TransactionRecord = tx;
 
 				if (side === "bid") {
 					transactionRecord["party1"] = [counterParty, "bid", headOrder.orderId, tradedQuantity];
@@ -229,12 +215,6 @@ export default class OrderBook extends EventEmitter2 {
 	}
 
 	cancelOrder(side: "ask" | "bid", orderId: string, time: number | null = null) {
-		if (time) {
-			this.time = time;
-		} else {
-			this.updateTime();
-		}
-
 		switch (side) {
 			case "bid":
 				if (this.bids.orderExists(orderId)) {
@@ -254,15 +234,9 @@ export default class OrderBook extends EventEmitter2 {
 	}
 
 	modifyOrder(orderId: string, orderUpdate: Quote, time: number | null = null) {
-		if (time) {
-			this.time = time;
-		} else {
-			this.updateTime();
-		}
-
 		const { side } = orderUpdate;
 		orderUpdate.orderId = orderId;
-		orderUpdate.timestamp = this.time;
+		orderUpdate.time = getCurrentUnix();
 
 		switch (side) {
 			case "bid":
