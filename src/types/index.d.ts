@@ -7,7 +7,9 @@ interface Quote {
 	timestamp: number;
 }
 
-type MixedQuote = Quote | Pick<Quote, "type" | "side" | "quantity" | "price">
+type SubmitQuote = Pick<Quote, "type" | "side" | "quantity" | "price">;
+
+type MixedQuote = Quote | SubmitQuote;
 
 interface TransactionRecord {
 	timestamp: number;

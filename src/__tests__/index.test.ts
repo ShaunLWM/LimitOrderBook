@@ -1,51 +1,53 @@
 import OrderBook from "../model/OrderBook";
+import * as Helper from "../lib/Helper";
 
-const EXTERNAL_ORDERS: Quote[] = [
+
+
+const EXTERNAL_ORDERS: SubmitQuote[] = [
 	{
 		type: "limit",
 		side: "ask",
 		quantity: 2,
 		price: 102,
-		orderId: "4",
-		timestamp: -1,
 	},
 	{
 		type: "limit",
 		side: "bid",
 		quantity: 2,
 		price: 98,
-		orderId: "3",
-		timestamp: -1,
 	},
-]
+];
 
 describe("LimitOrderBook", () => {
 	let orderBook: OrderBook;
 
 	beforeEach(() => {
+		const getUniqueIdSpy = jest.spyOn(Helper, 'getUniqueId');
+		getUniqueIdSpy.mockReturnValueOnce("1").mockReturnValueOnce("2").mockReturnValueOnce("3").mockReturnValueOnce("4").mockReturnValueOnce("5").mockReturnValueOnce("6").mockReturnValueOnce("7").mockReturnValueOnce("8");
+
 		orderBook = new OrderBook();
-		const limitOrders: Array<Quote> = [
+		const limitOrders: Array<SubmitQuote> = [
 			{
 				type: "limit",
 				side: "ask",
 				quantity: 2,
 				price: 105,
-				orderId: "1",
-				timestamp: -1,
 			},
 			{
 				type: "limit",
 				side: "bid",
 				quantity: 2,
 				price: 95,
-				orderId: "2",
-				timestamp: -1,
 			},
 		];
 
 		for (const order of limitOrders) {
 			orderBook.processOrder(order);
 		}
+	});
+
+	afterEach(() => {
+		jest.resetAllMocks();
 	});
 
 	it("Should properly show the best and worst Bids and Asks", () => {
@@ -76,8 +78,6 @@ describe("LimitOrderBook", () => {
 			side: "bid",
 			quantity: 1,
 			price: 102,
-			orderId: "110",
-			timestamp: -1,
 		});
 
 		if (!trades) {
@@ -88,7 +88,7 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(102);
 		expect(trades[0].quantity).toBe(1);
-		expect(trades[0].party1![0]).toBe("4"); // bought from orderId 4
+		expect(trades[0].party1![0]).toBe("3"); // bought from orderId 3
 		expect(trades[0].party1![3]).toBe(1); // bought 1 item
 
 		expect(orderBook.getBestBid()).toBe(98);
@@ -107,8 +107,6 @@ describe("LimitOrderBook", () => {
 			side: "bid",
 			quantity: 2,
 			price: 102,
-			orderId: "110",
-			timestamp: -1,
 		});
 
 		if (!trades) {
@@ -119,7 +117,7 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(102);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("4"); // bought from orderId 4
+		expect(trades[0].party1![0]).toBe("3"); // bought from orderId 3
 		expect(trades[0].party1![3]).toBe(2); // bought 2 item
 
 		expect(orderBook.getBestBid()).toBe(98);
@@ -138,8 +136,6 @@ describe("LimitOrderBook", () => {
 			side: "bid",
 			quantity: 6,
 			price: 102,
-			orderId: "110",
-			timestamp: -1,
 		});
 
 		if (!trades) {
@@ -150,7 +146,7 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(102);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("4"); // bought from orderId 4
+		expect(trades[0].party1![0]).toBe("3"); // bought from orderId 3
 		expect(trades[0].party1![3]).toBe(2); // bought 2 item
 
 		expect(orderBook.getBestBid()).toBe(102); // remaining 4 bids from the latest transactions
@@ -169,8 +165,6 @@ describe("LimitOrderBook", () => {
 			side: "bid",
 			quantity: 4,
 			price: 120,
-			orderId: "110",
-			timestamp: -1,
 		});
 
 		if (!trades) {
@@ -181,7 +175,7 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(102);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("4"); // bought from orderId 4
+		expect(trades[0].party1![0]).toBe("3"); // bought from orderId 3
 		expect(trades[0].party1![3]).toBe(2); // bought 2 item
 
 		expect(trades[1].price).toBe(105);
@@ -205,8 +199,6 @@ describe("LimitOrderBook", () => {
 			side: "bid",
 			quantity: 6,
 			price: 120,
-			orderId: "110",
-			timestamp: -1,
 		});
 
 		if (!trades) {
@@ -217,7 +209,7 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(102);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("4"); // bought from orderId 4
+		expect(trades[0].party1![0]).toBe("3"); // bought from orderId 3
 		expect(trades[0].party1![3]).toBe(2); // bought 2 item
 
 		expect(trades[1].price).toBe(105);
@@ -241,8 +233,6 @@ describe("LimitOrderBook", () => {
 			side: "ask",
 			quantity: 1,
 			price: 98,
-			orderId: "110",
-			timestamp: -1,
 		});
 
 		if (!trades) {
@@ -253,7 +243,7 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(98);
 		expect(trades[0].quantity).toBe(1);
-		expect(trades[0].party1![0]).toBe("3"); // sold to 3
+		expect(trades[0].party1![0]).toBe("4"); // sold to 4
 		expect(trades[0].party1![3]).toBe(1); // sold 1 item
 
 		expect(orderBook.getBestBid()).toBe(98);
@@ -272,8 +262,6 @@ describe("LimitOrderBook", () => {
 			side: "ask",
 			quantity: 2,
 			price: 98,
-			orderId: "110",
-			timestamp: -1,
 		});
 
 		if (!trades) {
@@ -284,7 +272,7 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(98);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("3"); // sold to 3
+		expect(trades[0].party1![0]).toBe("4"); // sold to 4
 		expect(trades[0].party1![3]).toBe(2); // sold 2 item
 
 		expect(orderBook.getBestBid()).toBe(95); // bought all 98
@@ -303,8 +291,6 @@ describe("LimitOrderBook", () => {
 			side: "ask",
 			quantity: 6,
 			price: 98,
-			orderId: "110",
-			timestamp: -1,
 		});
 
 		if (!trades) {
@@ -315,7 +301,7 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(98);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("3"); // sold to orderId 3
+		expect(trades[0].party1![0]).toBe("4"); // sold to orderId 4
 		expect(trades[0].party1![3]).toBe(2); // sold 2 item
 
 		expect(orderBook.getBestBid()).toBe(95); // bought all 98
@@ -334,8 +320,6 @@ describe("LimitOrderBook", () => {
 			side: "ask",
 			quantity: 4,
 			price: 90,
-			orderId: "110",
-			timestamp: -1,
 		});
 
 		if (!trades) {
@@ -346,7 +330,7 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(98);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("3"); // sold to orderId 3
+		expect(trades[0].party1![0]).toBe("4"); // sold to orderId 3
 		expect(trades[0].party1![3]).toBe(2); // bought 2 item
 
 		expect(trades[1].price).toBe(95);
@@ -370,8 +354,6 @@ describe("LimitOrderBook", () => {
 			side: "ask",
 			quantity: 6,
 			price: 90,
-			orderId: "110",
-			timestamp: -1,
 		});
 
 		if (!trades) {
@@ -382,7 +364,7 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(98);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("3"); // sold to orderId 3
+		expect(trades[0].party1![0]).toBe("4"); // sold to orderId 3
 		expect(trades[0].party1![3]).toBe(2); // bought 2 item
 
 		expect(trades[1].price).toBe(95);

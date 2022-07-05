@@ -1,6 +1,6 @@
 import Denque from "denque";
 import { EventEmitter2 } from "eventemitter2";
-import { getCurrentUnix, getUniqueId } from "../lib/Helper";
+import { getCurrentUnix, getTxId, getUniqueId } from "../lib/Helper";
 import OrderList from "./OrderList";
 import OrderTree from "./OrderTree";
 
@@ -35,9 +35,13 @@ export default class OrderBook extends EventEmitter2 {
 	}
 
 	processOrder(qte: MixedQuote) {
-		const { type: orderType } = qte;
+		const { type: orderType, quantity } = qte;
 		let orderInBook = null;
 		let trades = null;
+
+		if (quantity <= 0) {
+			throw new Error("quantity must be greater than 0");
+		}
 
 		const quote: Quote = {
 			timestamp: getCurrentUnix(),
@@ -46,11 +50,6 @@ export default class OrderBook extends EventEmitter2 {
 		}
 
 		this.updateTime();
-		quote.timestamp = this.time;
-
-		if (quote.quantity <= 0) {
-			throw new Error("quantity must be greater than 0");
-		}
 
 		if (orderType === "market") {
 			trades = this.processMarketOrder(quote);
@@ -100,7 +99,7 @@ export default class OrderBook extends EventEmitter2 {
 					quantityToTrade -= tradedQuantity;
 				}
 
-				const txId = getUniqueId();
+				const txId = getTxId();
 
 				this.emit("transaction:new", {
 					txId,
@@ -168,6 +167,7 @@ export default class OrderBook extends EventEmitter2 {
 
 	processLimitOrder(quote: Quote) {
 		let orderInBook = null;
+		let createNewOrder = false;
 		const trades: Array<TransactionRecord> = [];
 		let quantityToTrade = quote.quantity;
 		const { side, price } = quote;
@@ -181,11 +181,14 @@ export default class OrderBook extends EventEmitter2 {
 					quantityToTrade = result.quantityToTrade;
 					trades.push(...result.trades);
 					minPrice = this.asks.minPrice();
+					createNewOrder = true;
 				}
 
 				if (quantityToTrade > 0) {
 					// creating new order since we have not yet filled the order
-					quote.orderId = getUniqueId();
+					if (createNewOrder) {
+						quote.orderId = getUniqueId();
+					}
 					quote.quantity = quantityToTrade;
 					this.bids.insertOrder(quote);
 					orderInBook = quote;
@@ -201,10 +204,13 @@ export default class OrderBook extends EventEmitter2 {
 					quantityToTrade = result.quantityToTrade;
 					trades.push(...result.trades);
 					maxPrice = this.bids.maxPrice();
+					createNewOrder = true;
 				}
 
 				if (quantityToTrade > 0) {
-					quote.orderId = getUniqueId();
+					if (createNewOrder) {
+						quote.orderId = getUniqueId();
+					}
 					quote.quantity = quantityToTrade;
 					this.asks.insertOrder(quote);
 					orderInBook = quote;
