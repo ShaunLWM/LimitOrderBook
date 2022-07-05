@@ -59,6 +59,24 @@ describe("LimitOrderBook", () => {
 		})).toThrow("quantity must be greater than 0");
 	});
 
+	it("Should throw an error when type is not 'market' or 'limit'", () => {
+		expect(() => orderBook.processOrder({
+			type: "ERROR",
+			side: "bid",
+			quantity: 10,
+			price: 105,
+		} as any)).toThrow("orderType for processOrder() is neither 'market' or 'limit'");
+	});
+
+	it("Should throw an error when side is not 'bid' or 'ask'", () => {
+		expect(() => orderBook.processOrder({
+			type: "limit",
+			side: "ERROR",
+			quantity: 10,
+			price: 105,
+		} as any)).toThrow('processLimitOrder() given neither "bid" nor "ask"');
+	});
+
 	it("Should properly show the best and worst Bids and Asks", () => {
 		expect(orderBook.getBestBid()).toBe(95);
 		expect(orderBook.getWorstBid()).toBe(95);
