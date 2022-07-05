@@ -115,8 +115,8 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(102);
 		expect(trades[0].quantity).toBe(1);
-		expect(trades[0].party1![0]).toBe("3"); // bought from orderId 3
-		expect(trades[0].party1![3]).toBe(1); // bought 1 item
+		expect(trades[0].party1!.orderId).toBe("3"); // bought from orderId 3
+		expect(trades[0].party1!.quantity).toBe(1); // bought 1 item
 
 		expect(orderBook.getBestBid()).toBe(98);
 		expect(orderBook.getWorstBid()).toBe(95);
@@ -144,8 +144,8 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(102);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("3"); // bought from orderId 3
-		expect(trades[0].party1![3]).toBe(2); // bought 2 item
+		expect(trades[0].party1!.orderId).toBe("3"); // bought from orderId 3
+		expect(trades[0].party1!.quantity).toBe(2); // bought 2 item
 
 		expect(orderBook.getBestBid()).toBe(98);
 		expect(orderBook.getWorstBid()).toBe(95);
@@ -173,8 +173,8 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(102);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("3"); // bought from orderId 3
-		expect(trades[0].party1![3]).toBe(2); // bought 2 item
+		expect(trades[0].party1!.orderId).toBe("3"); // bought from orderId 3
+		expect(trades[0].party1!.quantity).toBe(2); // bought 2 item
 
 		expect(orderBook.getBestBid()).toBe(102); // remaining 4 bids from the latest transactions
 		expect(orderBook.getWorstBid()).toBe(95);
@@ -202,13 +202,13 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(102);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("3"); // bought from orderId 3
-		expect(trades[0].party1![3]).toBe(2); // bought 2 item
+		expect(trades[0].party1!.orderId).toBe("3"); // bought from orderId 3
+		expect(trades[0].party1!.quantity).toBe(2); // bought 2 item
 
 		expect(trades[1].price).toBe(105);
 		expect(trades[1].quantity).toBe(2);
-		expect(trades[1].party1![0]).toBe("1"); // bought from orderId 1
-		expect(trades[1].party1![3]).toBe(2); // bought 2 item
+		expect(trades[1].party1!.orderId).toBe("1"); // bought from orderId 1
+		expect(trades[1].party1!.quantity).toBe(2); // bought 2 item
 
 		expect(orderBook.getBestBid()).toBe(98);
 		expect(orderBook.getWorstBid()).toBe(95);
@@ -236,13 +236,13 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(102);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("3"); // bought from orderId 3
-		expect(trades[0].party1![3]).toBe(2); // bought 2 item
+		expect(trades[0].party1!.orderId).toBe("3"); // bought from orderId 3
+		expect(trades[0].party1!.quantity).toBe(2); // bought 2 item
 
 		expect(trades[1].price).toBe(105);
 		expect(trades[1].quantity).toBe(2);
-		expect(trades[1].party1![0]).toBe("1"); // bought from orderId 1
-		expect(trades[1].party1![3]).toBe(2); // bought 2 item
+		expect(trades[1].party1!.orderId).toBe("1"); // bought from orderId 1
+		expect(trades[1].party1!.quantity).toBe(2); // bought 2 item
 
 		expect(orderBook.getBestBid()).toBe(120);
 		expect(orderBook.getWorstBid()).toBe(95);
@@ -270,8 +270,8 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(98);
 		expect(trades[0].quantity).toBe(1);
-		expect(trades[0].party1![0]).toBe("4"); // sold to 4
-		expect(trades[0].party1![3]).toBe(1); // sold 1 item
+		expect(trades[0].party1!.orderId).toBe("4"); // sold to 4
+		expect(trades[0].party1!.quantity).toBe(1); // sold 1 item
 
 		expect(orderBook.getBestBid()).toBe(98);
 		expect(orderBook.getWorstBid()).toBe(95);
@@ -299,8 +299,8 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(98);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("4"); // sold to 4
-		expect(trades[0].party1![3]).toBe(2); // sold 2 item
+		expect(trades[0].party1!.orderId).toBe("4"); // sold to 4
+		expect(trades[0].party1!.quantity).toBe(2); // sold 2 item
 
 		expect(orderBook.getBestBid()).toBe(95); // bought all 98
 		expect(orderBook.getWorstBid()).toBe(95);
@@ -328,8 +328,8 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(98);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("4"); // sold to orderId 4
-		expect(trades[0].party1![3]).toBe(2); // sold 2 item
+		expect(trades[0].party1!.orderId).toBe("4"); // sold to orderId 4
+		expect(trades[0].party1!.quantity).toBe(2); // sold 2 item
 
 		expect(orderBook.getBestBid()).toBe(95); // bought all 98
 		expect(orderBook.getWorstBid()).toBe(95);
@@ -357,13 +357,13 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(98);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("4"); // sold to orderId 3
-		expect(trades[0].party1![3]).toBe(2); // bought 2 item
+		expect(trades[0].party1!.orderId).toBe("4"); // sold to orderId 3
+		expect(trades[0].party1!.quantity).toBe(2); // bought 2 item
 
 		expect(trades[1].price).toBe(95);
 		expect(trades[1].quantity).toBe(2);
-		expect(trades[1].party1![0]).toBe("2"); // sold to orderId 2
-		expect(trades[1].party1![3]).toBe(2); // bought 2 item
+		expect(trades[1].party1!.orderId).toBe("2"); // sold to orderId 2
+		expect(trades[1].party1!.quantity).toBe(2); // bought 2 item
 
 		expect(orderBook.getBestBid()).toBe(null);
 		expect(orderBook.getWorstBid()).toBe(null);
@@ -391,13 +391,13 @@ describe("LimitOrderBook", () => {
 
 		expect(trades[0].price).toBe(98);
 		expect(trades[0].quantity).toBe(2);
-		expect(trades[0].party1![0]).toBe("4"); // sold to orderId 3
-		expect(trades[0].party1![3]).toBe(2); // bought 2 item
+		expect(trades[0].party1!.orderId).toBe("4"); // sold to orderId 3
+		expect(trades[0].party1!.quantity).toBe(2); // bought 2 item
 
 		expect(trades[1].price).toBe(95);
 		expect(trades[1].quantity).toBe(2);
-		expect(trades[1].party1![0]).toBe("2"); // sold to orderId 2
-		expect(trades[1].party1![3]).toBe(2); // bought 2 item
+		expect(trades[1].party1!.orderId).toBe("2"); // sold to orderId 2
+		expect(trades[1].party1!.quantity).toBe(2); // bought 2 item
 
 		expect(orderBook.getBestBid()).toBe(null);
 		expect(orderBook.getWorstBid()).toBe(null);

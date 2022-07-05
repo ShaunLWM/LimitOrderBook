@@ -8,18 +8,14 @@ export default class OrderBook extends EventEmitter2 {
 	tape: Denque;
 	bids: OrderTree;
 	asks: OrderTree;
-	lastTick: number | null;
 	lastTimestamp: number;
-	tickSize: number;
 
-	constructor({ tickSize = 0.0001 }: { tickSize?: number } = {}) {
+	constructor() {
 		super({ wildcard: true, delimiter: ":" });
 		this.tape = new Denque<TransactionRecord>();
 		this.bids = new OrderTree();
 		this.asks = new OrderTree();
-		this.lastTick = null;
 		this.lastTimestamp = 0;
-		this.tickSize = tickSize;
 		this.setupListeners();
 	}
 
@@ -104,13 +100,8 @@ export default class OrderBook extends EventEmitter2 {
 
 				const transactionRecord: TransactionRecord = tx;
 
-				if (side === "bid") {
-					transactionRecord["party1"] = [counterParty, "bid", headOrder.orderId, tradedQuantity];
-					transactionRecord["party2"] = [quote.orderId, "ask", null, null];
-				} else {
-					transactionRecord["party1"] = [counterParty, "ask", headOrder.orderId, tradedQuantity];
-					transactionRecord["party2"] = [quote.orderId, "bid", null, null];
-				}
+				transactionRecord["party1"] = { orderId: counterParty, side, quantity: tradedQuantity, price: tradedPrice };
+				transactionRecord["party2"] = { orderId: quote.orderId, side: side === "ask" ? "bid" : "ask" };
 
 				this.tape.push(transactionRecord);
 				trades.push(transactionRecord);
@@ -316,9 +307,5 @@ export default class OrderBook extends EventEmitter2 {
 
 		str += "\n";
 		return str;
-	}
-
-	emito(event: string, ...args: any) {
-		this.emit(event, args);
 	}
 }
