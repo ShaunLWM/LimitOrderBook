@@ -50,6 +50,15 @@ describe("LimitOrderBook", () => {
 		jest.resetAllMocks();
 	});
 
+	it("Should throw an error when purchasing 0 quantity", () => {
+		expect(() => orderBook.processOrder({
+			type: "limit",
+			side: "ask",
+			quantity: 0,
+			price: 105,
+		})).toThrow("quantity must be greater than 0");
+	});
+
 	it("Should properly show the best and worst Bids and Asks", () => {
 		expect(orderBook.getBestBid()).toBe(95);
 		expect(orderBook.getWorstBid()).toBe(95);
