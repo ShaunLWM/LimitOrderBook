@@ -8,14 +8,12 @@ export default class OrderBook extends EventEmitter2 {
 	tape: Denque;
 	bids: OrderTree;
 	asks: OrderTree;
-	lastTimestamp: number;
 
 	constructor() {
 		super({ wildcard: true, delimiter: ":" });
 		this.tape = new Denque<TransactionRecord>();
 		this.bids = new OrderTree();
 		this.asks = new OrderTree();
-		this.lastTimestamp = 0;
 		this.setupListeners();
 	}
 
@@ -24,7 +22,7 @@ export default class OrderBook extends EventEmitter2 {
 		this.asks.onAny((event, value) => this.emit(event, value));
 	}
 
-	processOrder(qte: MixedQuote) {
+	processOrder(qte: OrderQuote) {
 		const { type: orderType, quantity } = qte;
 		let orderInBook = null;
 		let trades = null;
@@ -34,9 +32,9 @@ export default class OrderBook extends EventEmitter2 {
 		}
 
 		const quote: Quote = {
+			...qte,
 			time: getCurrentUnix(),
 			orderId: getUniqueId(),
-			...qte,
 		}
 
 		if (orderType === "market") {

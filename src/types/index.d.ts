@@ -1,17 +1,28 @@
 type OrderSide = "bid" | "ask";
+type OrderType = "limit" | "market";
 
-interface Quote {
-	type: "limit" | "market";
-	side: OrderSide;
-	quantity: number;
-	price: number;
+interface BaseQuote {
 	orderId: string;
 	time: number;
 }
 
-type SubmitQuote = Pick<Quote, "type" | "side" | "quantity" | "price">;
+interface LimitQuote {
+	type: "limit";
+	price: number;
+	side: OrderSide;
+	quantity: number;
+}
 
-type MixedQuote = Quote | SubmitQuote;
+interface MarketQuote {
+	type: "market";
+	price: never;
+	side: OrderSide;
+	quantity: number;
+}
+
+type OrderQuote = MarketQuote | LimitQuote;
+
+type Quote = OrderQuote & BaseQuote;
 
 type TransactionPartyDetail = Pick<Quote, "orderId" | "side" | "quantity" | "price">;
 

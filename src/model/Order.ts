@@ -1,12 +1,12 @@
 import OrderList from "./OrderList";
 
-export default class Order implements Quote {
-	type: "limit" | "market";
+export default class Order {
+	type: OrderType;
 	time: number;
 	quantity: number;
 	price: number;
 	orderId: string;
-	side: "ask" | "bid";
+	side: OrderSide;
 
 	nextOrder: Order | null = null;
 	prevOrder: Order | null = null;

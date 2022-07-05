@@ -1,9 +1,7 @@
 import OrderBook from "../model/OrderBook";
 import * as Helper from "../lib/Helper";
 
-
-
-const EXTERNAL_ORDERS: SubmitQuote[] = [
+const EXTERNAL_ORDERS: LimitQuote[] = [
 	{
 		type: "limit",
 		side: "ask",
@@ -26,7 +24,7 @@ describe("LimitOrderBook", () => {
 		getUniqueIdSpy.mockReturnValueOnce("1").mockReturnValueOnce("2").mockReturnValueOnce("3").mockReturnValueOnce("4").mockReturnValueOnce("5").mockReturnValueOnce("6").mockReturnValueOnce("7").mockReturnValueOnce("8");
 
 		orderBook = new OrderBook();
-		const limitOrders: Array<SubmitQuote> = [
+		const limitOrders: Array<LimitQuote> = [
 			{
 				type: "limit",
 				side: "ask",
