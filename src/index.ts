@@ -1,1 +1,1 @@
-export * from './model/OrderBook';
+export { default as OrderBook } from './model/OrderBook';
