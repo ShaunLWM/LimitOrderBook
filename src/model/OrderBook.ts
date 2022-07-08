@@ -5,7 +5,7 @@ import OrderList from "./OrderList";
 import OrderTree from "./OrderTree";
 
 export default class OrderBook extends EventEmitter2 {
-	tape: Denque;
+	tape: Denque<TransactionRecord>;
 	bids: OrderTree;
 	asks: OrderTree;
 
@@ -297,7 +297,7 @@ export default class OrderBook extends EventEmitter2 {
 			let num = 0;
 			for (let entry of this.tape.toArray()) {
 				if (num < 10) {
-					str += `Trans: ${entry.price}x${entry.quantity} From: ${entry.party1[0]}, To: ${entry.party2[0]}\n`;
+					str += `Trans: ${entry.price}x${entry.quantity} From: ${entry.party1?.orderId}, To: ${entry.party2?.orderId}\n`;
 					num += 1;
 				} else break;
 			}
