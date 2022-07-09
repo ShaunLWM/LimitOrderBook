@@ -246,7 +246,7 @@ export default class OrderBook extends EventEmitter2 {
 		}
 	}
 
-	getVolumeAtPrice(side: "ask" | "bid", price: number) {
+	getVolumeAtPrice(side: OrderSide, price: number) {
 		let volume: BigNumber = new BigNumber(0);
 		switch (side) {
 			case "bid":
@@ -284,6 +284,22 @@ export default class OrderBook extends EventEmitter2 {
 
 	getWorstAsk() {
 		return this.asks.maxPrice();
+	}
+
+	getSimpleBids() {
+		const bids: SimpleBook["bids"] = [];
+		this.bids.priceMap.forEach(order => bids.push({ price: order.key, volume: this.getVolumeAtPrice("bid", order.key).toNumber() }));
+		return bids;
+	}
+
+	getSimpleAsks() {
+		const asks: SimpleBook["asks"] = [];
+		this.asks.priceMap.forEach(order => asks.push({ price: order.key, volume: this.getVolumeAtPrice("ask", order.key).toNumber() }));
+		return asks;
+	}
+
+	getSimpleBook(): SimpleBook {
+		return { bids: this.getSimpleBids(), asks: this.getSimpleAsks() };
 	}
 
 	toString() {

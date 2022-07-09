@@ -34,3 +34,13 @@ interface TransactionRecord {
 	party1?: TransactionPartyDetail;
 	party2?: Omit<TransactionPartyDetail, "quantity" | "price">;
 }
+
+interface SimpleBookRecord {
+	price: number;
+	volume: number;
+}
+
+interface SimpleBook {
+	bids: SimpleBookRecord[];
+	asks: SimpleBookRecord[];
+}
