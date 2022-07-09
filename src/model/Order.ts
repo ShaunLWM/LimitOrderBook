@@ -1,9 +1,10 @@
+import BigNumber from "bignumber.js";
 import OrderList from "./OrderList";
 
 export default class Order {
 	type: OrderType;
 	time: number;
-	quantity: number;
+	quantity: BigNumber;
 	price: number;
 	orderId: string;
 	side: OrderSide;
@@ -15,7 +16,7 @@ export default class Order {
 	constructor(quote: Quote, orderList: OrderList) {
 		if (!quote.side) throw new Error("Quote should have a side");
 		this.time = quote.time;
-		this.quantity = quote.quantity;
+		this.quantity = new BigNumber(quote.quantity);
 		this.price = quote.price;
 		this.orderId = quote.orderId;
 		this.orderList = orderList;
@@ -24,13 +25,13 @@ export default class Order {
 	}
 
 	updateQuantity(quantity: number, timestamp: number) {
-		if (quantity > this.quantity && this.orderList.tailOrder !== null && this.orderList.tailOrder.toString() !== this.toString()) {
+		if (new BigNumber(quantity).isGreaterThan(this.quantity) && this.orderList.tailOrder !== null && this.orderList.tailOrder.toString() !== this.toString()) {
 			this.orderList.moveToTail(this);
 		}
 
-		this.orderList.volume -= this.quantity - quantity;
+		this.orderList.volume = this.orderList.volume.minus(this.quantity.minus(quantity));
 		this.time = timestamp;
-		this.quantity = quantity;
+		this.quantity = new BigNumber(quantity);
 	}
 
 	toString() {

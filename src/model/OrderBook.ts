@@ -1,3 +1,4 @@
+import BigNumber from "bignumber.js";
 import Denque from "denque";
 import { EventEmitter2 } from "eventemitter2";
 import { getCurrentUnix, getTxId, getUniqueId } from "../lib/Helper";
@@ -53,7 +54,7 @@ export default class OrderBook extends EventEmitter2 {
 		};
 	}
 
-	processOrderList(side: "bid" | "ask", orderList: OrderList | null, quantityStillToTrade: number, quote: Quote) {
+	processOrderList(side: OrderSide, orderList: OrderList | null, quantityStillToTrade: number, quote: Quote) {
 		const trades: Array<TransactionRecord> = [];
 		let quantityToTrade = quantityStillToTrade;
 		while (orderList && orderList.length > 0 && quantityToTrade > 0) {
@@ -61,28 +62,28 @@ export default class OrderBook extends EventEmitter2 {
 			if (headOrder) {
 				const tradedPrice = headOrder.price;
 				const counterParty = headOrder.orderId;
-				let newBookQuantity = null;
-				let tradedQuantity = null;
+				let newBookQuantity: number | null = null;
+				let tradedQuantity: number | null = null;
 
-				if (quantityToTrade < headOrder.quantity) {
+				if (headOrder.quantity.isGreaterThan(quantityToTrade)) {
 					tradedQuantity = quantityToTrade;
-					newBookQuantity = headOrder.quantity - quantityToTrade;
+					newBookQuantity = headOrder.quantity.minus(quantityToTrade).toNumber();
 					headOrder.updateQuantity(newBookQuantity, headOrder.time);
 					quantityToTrade = 0;
-				} else if (quantityToTrade === headOrder.quantity) {
+				} else if (headOrder.quantity.isEqualTo(quantityToTrade)) {
 					tradedQuantity = quantityToTrade;
 					if (side === "bid") this.bids.removeOrderById(headOrder.orderId);
 					else this.asks.removeOrderById(headOrder.orderId);
 					quantityToTrade = 0;
 				} else {
-					tradedQuantity = headOrder.quantity;
+					tradedQuantity = headOrder.quantity.toNumber();
 					if (side === "bid") {
 						this.bids.removeOrderById(headOrder.orderId);
 					} else {
 						this.asks.removeOrderById(headOrder.orderId);
 					}
 
-					quantityToTrade -= tradedQuantity;
+					quantityToTrade = new BigNumber(quantityToTrade).minus(tradedQuantity).toNumber();
 				}
 
 				const tx = {
@@ -203,7 +204,7 @@ export default class OrderBook extends EventEmitter2 {
 		};
 	}
 
-	cancelOrder(side: "ask" | "bid", orderId: string, time: number | null = null) {
+	cancelOrder(side: OrderSide, orderId: string) {
 		switch (side) {
 			case "bid":
 				if (this.bids.orderExists(orderId)) {
@@ -222,7 +223,7 @@ export default class OrderBook extends EventEmitter2 {
 		}
 	}
 
-	modifyOrder(orderId: string, orderUpdate: Quote, time: number | null = null) {
+	modifyOrder(orderId: string, orderUpdate: Quote) {
 		const { side } = orderUpdate;
 		orderUpdate.orderId = orderId;
 		orderUpdate.time = getCurrentUnix();
@@ -246,16 +247,20 @@ export default class OrderBook extends EventEmitter2 {
 	}
 
 	getVolumeAtPrice(side: "ask" | "bid", price: number) {
-		let volume = 0;
+		let volume: BigNumber = new BigNumber(0);
 		switch (side) {
 			case "bid":
 				const b = this.bids.getPrice(price);
-				if (this.bids.priceExists(price) && b) volume = b.volume;
+				if (this.bids.priceExists(price) && b) {
+					volume = b.volume;
+				}
 				break;
 
 			case "ask":
 				const a = this.asks.getPrice(price);
-				if (this.asks.priceExists(price) && a) volume = a.volume;
+				if (this.asks.priceExists(price) && a) {
+					volume = a.volume;
+				}
 				break;
 
 			default:

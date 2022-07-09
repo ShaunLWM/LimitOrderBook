@@ -1,14 +1,16 @@
+import BigNumber from "bignumber.js";
 import Order from "./Order";
 
 export default class OrderList {
 	headOrder: Order | null = null;
 	tailOrder: Order | null = null;
-	length = 0;
-	volume = 0;
-	last: Order | null = null;
-	hasValue: boolean = true;
+	length: number;
+	volume: BigNumber ;
 
-	constructor() {}
+	constructor() {
+		this.length = 0;
+		this.volume = new BigNumber(0);
+	}
 
 	*[Symbol.iterator]() {
 		let current = this.headOrder;
@@ -35,11 +37,11 @@ export default class OrderList {
 
 		this.tailOrder = order;
 		this.length += 1;
-		this.volume += order.quantity;
+		this.volume = this.volume.plus(order.quantity);
 	}
 
 	removeOrder(order: Order) {
-		this.volume -= order.quantity;
+		this.volume = this.volume.minus(order.quantity);
 		this.length -= 1;
 		if (this.length === 0) return;
 		const { nextOrder, prevOrder } = order;

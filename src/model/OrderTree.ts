@@ -1,7 +1,8 @@
-import { SortedDictionary } from "yaca";
-import OrderList from "./OrderList";
-import Order from "./Order";
+import BigNumber from "bignumber.js";
 import { EventEmitter2 } from "eventemitter2";
+import { SortedDictionary } from "yaca";
+import Order from "./Order";
+import OrderList from "./OrderList";
 
 export default class OrderTree extends EventEmitter2 {
 	priceMap: SortedDictionary<number, OrderList>;
@@ -9,7 +10,7 @@ export default class OrderTree extends EventEmitter2 {
 	orderMap: { [orderId: string]: Order };
 	numOrders: number;
 	depth: number;
-	volume: number;
+	volume: BigNumber;
 
 	constructor() {
 		super({ wildcard: true, delimiter: ":" });
@@ -18,7 +19,7 @@ export default class OrderTree extends EventEmitter2 {
 		this.orderMap = {};
 		this.numOrders = 0;
 		this.depth = 0;
-		this.volume = 0;
+		this.volume = new BigNumber(0);
 	}
 
 	get length(): number {
@@ -75,7 +76,7 @@ export default class OrderTree extends EventEmitter2 {
 		const order = new Order(quote, this.priceMap.get(quote.price));
 		this.priceMap.get(order.price).appendOrder(order);
 		this.orderMap[order.orderId] = order;
-		this.volume += order.quantity;
+		this.volume = this.volume.plus(order.quantity);
 		this.updatePriceKeys();
 		this.emit("order:new", quote);
 	}
@@ -95,7 +96,7 @@ export default class OrderTree extends EventEmitter2 {
 			order.updateQuantity(orderUpdate.quantity, orderUpdate.time);
 		}
 
-		this.volume += order.quantity - originalQuantity;
+		this.volume = this.volume.plus((order.quantity).minus(originalQuantity));
 		this.updatePriceKeys();
 		this.emit("order:update", orderUpdate);
 	}
@@ -104,7 +105,7 @@ export default class OrderTree extends EventEmitter2 {
 		this.numOrders -= 1;
 		const order = this.orderMap[orderId];
 		if (!order) throw new Error("Order does not exist");
-		this.volume -= order.quantity;
+		this.volume = this.volume.minus(order.quantity);
 		order.orderList.removeOrder(order);
 		if (order.orderList.length === 0) {
 			this.removePrice(order.price);
