@@ -93,6 +93,7 @@ export default class OrderBook extends EventEmitter2 {
 					quantity: tradedQuantity,
 					from: counterParty,
 					to: quote.orderId,
+					side,
 				}
 
 				this.emit("transaction:new", tx);
