@@ -26,7 +26,7 @@ export default class OrderBook extends EventEmitter2 {
 	processOrder(qte: OrderQuote) {
 		const { type: orderType, quantity } = qte;
 		let orderInBook = null;
-		let trades = null;
+		let trades: TransactionRecord[] = [];
 
 		if (quantity <= 0) {
 			throw new Error("quantity must be greater than 0");
@@ -39,7 +39,7 @@ export default class OrderBook extends EventEmitter2 {
 		}
 
 		if (orderType === "market") {
-			trades = this.processMarketOrder(quote);
+			trades = this.processMarketOrder(quote).trades;
 		} else if (orderType === "limit") {
 			const result = this.processLimitOrder(quote);
 			trades = result.trades;
