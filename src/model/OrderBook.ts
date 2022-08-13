@@ -140,6 +140,10 @@ export default class OrderBook extends EventEmitter2 {
 			default:
 				throw new Error(`processMarketOrder() received neither "bid" nor "ask"`);
 		}
+
+		return { 
+			trades
+		}
 	}
 
 	processLimitOrder(quote: Quote) {
