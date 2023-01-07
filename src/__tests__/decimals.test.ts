@@ -1,6 +1,21 @@
 import OrderBook from "../model/OrderBook";
 import * as Helper from "../lib/Helper";
 
+/*
+During each test, the LOB should be as follows
+
+SELL/ASK
+105.64 x 1.90567
+102.42 x 2.83475	
+
+BUY/BID
+98.19 x 1.34876
+95.88 x 2.34501
+*/
+
+
+
+
 const EXTERNAL_ORDERS: LimitQuote[] = [
 	{
 		type: "limit",
@@ -89,7 +104,10 @@ describe("LimitOrderBook (decimals)", () => {
 
 	it("Should successfully add 1 normal limit order each for Bids and Asks", () => {
 		for (const order of EXTERNAL_ORDERS) {
-			orderBook.processOrder(order);
+			const results = orderBook.processOrder(order);
+			expect(results.trades.length).toBe(0); // No trades should be made
+			expect(results.orderInBook?.quantity).toBe(order.quantity);
+			expect(results.orderInBook?.price).toBe(order.price);
 		}
 
 		expect(orderBook.getBestBid()).toBe(98.19);
@@ -114,7 +132,7 @@ describe("LimitOrderBook (decimals)", () => {
 			orderBook.processOrder(order);
 		}
 
-		const { trades } = orderBook.processOrder({
+		const { trades, orderInBook } = orderBook.processOrder({
 			type: "limit",
 			side: "bid",
 			quantity: 0.57216,
@@ -126,6 +144,7 @@ describe("LimitOrderBook (decimals)", () => {
 		}
 
 		expect(trades.length).toBe(1);
+		expect(orderInBook).toBeNull(); // No order should be left in the book since all trades are processed
 
 		expect(trades[0].price).toBe(102.42);
 		expect(trades[0].quantity).toBe(0.57216);
@@ -155,7 +174,7 @@ describe("LimitOrderBook (decimals)", () => {
 			orderBook.processOrder(order);
 		}
 
-		const { trades } = orderBook.processOrder({
+		const { trades, orderInBook } = orderBook.processOrder({
 			type: "limit",
 			side: "bid",
 			quantity: 2.83475,
@@ -167,6 +186,7 @@ describe("LimitOrderBook (decimals)", () => {
 		}
 
 		expect(trades.length).toBe(1);
+		expect(orderInBook).toBeNull();
 
 		expect(trades[0].price).toBe(102.42);
 		expect(trades[0].quantity).toBe(2.83475);
@@ -194,7 +214,7 @@ describe("LimitOrderBook (decimals)", () => {
 			orderBook.processOrder(order);
 		}
 
-		const { trades } = orderBook.processOrder({
+		const { trades, orderInBook } = orderBook.processOrder({
 			type: "limit",
 			side: "bid",
 			quantity: 6.32461,
@@ -206,6 +226,10 @@ describe("LimitOrderBook (decimals)", () => {
 		}
 
 		expect(trades.length).toBe(1);
+		expect(orderInBook).not.toBeNull();
+		expect(orderInBook!.quantity).toBe(3.48986); // remaining quantity of 6.32461 - 2.83475
+		expect(orderInBook?.price).toBe(102.42);
+		expect(orderInBook?.orderId).toBe("6"); // 4 in order book, current 5, created 6
 
 		expect(trades[0].price).toBe(102.42);
 		expect(trades[0].quantity).toBe(2.83475);
@@ -231,7 +255,7 @@ describe("LimitOrderBook (decimals)", () => {
 			orderBook.processOrder(order);
 		}
 
-		const { trades } = orderBook.processOrder({
+		const { trades, orderInBook } = orderBook.processOrder({
 			type: "limit",
 			side: "bid",
 			quantity: 4.74042,
@@ -243,6 +267,7 @@ describe("LimitOrderBook (decimals)", () => {
 		}
 
 		expect(trades.length).toBe(2);
+		expect(orderInBook).toBeNull();
 
 		expect(trades[0].price).toBe(102.42);
 		expect(trades[0].quantity).toBe(2.83475);
@@ -266,7 +291,7 @@ describe("LimitOrderBook (decimals)", () => {
 			orderBook.processOrder(order);
 		}
 
-		const { trades } = orderBook.processOrder({
+		const { trades, orderInBook } = orderBook.processOrder({
 			type: "limit",
 			side: "bid",
 			quantity: 6,
@@ -278,6 +303,11 @@ describe("LimitOrderBook (decimals)", () => {
 		}
 
 		expect(trades.length).toBe(2);
+
+		expect(orderInBook).not.toBeNull();
+		expect(orderInBook!.quantity).toBe(1.25958); // remaining quantity of 6 - 1.90567 - 2.83475
+		expect(orderInBook?.price).toBe(120.33);
+		expect(orderInBook?.orderId).toBe("6"); // 4 in order book, current 5, created 6
 
 		expect(trades[0].price).toBe(102.42);
 		expect(trades[0].quantity).toBe(2.83475);
@@ -300,7 +330,7 @@ describe("LimitOrderBook (decimals)", () => {
 			orderBook.processOrder(order);
 		}
 
-		const { trades } = orderBook.processOrder({
+		const { trades, orderInBook } = orderBook.processOrder({
 			type: "limit",
 			side: "ask",
 			quantity: 0.82565,
@@ -312,6 +342,7 @@ describe("LimitOrderBook (decimals)", () => {
 		}
 
 		expect(trades.length).toBe(1);
+		expect(orderInBook).toBeNull(); // buyer only selling 0.82565 to someone buying 1.345876
 
 		expect(trades[0].price).toBe(98.19);
 		expect(trades[0].quantity).toBe(0.82565);
@@ -336,7 +367,7 @@ describe("LimitOrderBook (decimals)", () => {
 			orderBook.processOrder(order);
 		}
 
-		const { trades } = orderBook.processOrder({
+		const { trades, orderInBook } = orderBook.processOrder({
 			type: "limit",
 			side: "ask",
 			quantity: 1.34876,
@@ -344,10 +375,11 @@ describe("LimitOrderBook (decimals)", () => {
 		});
 
 		if (!trades) {
-			throw new Error("Shouldn't crash"); 1
+			throw new Error("Shouldn't crash");
 		}
 
 		expect(trades.length).toBe(1);
+		expect(orderInBook).toBeNull();
 
 		expect(trades[0].price).toBe(98.19);
 		expect(trades[0].quantity).toBe(1.34876);
@@ -370,7 +402,7 @@ describe("LimitOrderBook (decimals)", () => {
 			orderBook.processOrder(order);
 		}
 
-		const { trades } = orderBook.processOrder({
+		const { trades, orderInBook } = orderBook.processOrder({
 			type: "limit",
 			side: "ask",
 			quantity: 6,
@@ -382,6 +414,9 @@ describe("LimitOrderBook (decimals)", () => {
 		}
 
 		expect(trades.length).toBe(1);
+		expect(orderInBook).not.toBeNull();
+		expect(orderInBook?.quantity).toBe(4.65124);
+		expect(orderInBook?.price).toBe(98.19);
 
 		expect(trades[0].price).toBe(98.19);
 		expect(trades[0].quantity).toBe(1.34876);
@@ -404,7 +439,7 @@ describe("LimitOrderBook (decimals)", () => {
 			orderBook.processOrder(order);
 		}
 
-		const { trades } = orderBook.processOrder({
+		const { trades, orderInBook } = orderBook.processOrder({
 			type: "limit",
 			side: "ask",
 			quantity: 3.69377,
@@ -416,6 +451,7 @@ describe("LimitOrderBook (decimals)", () => {
 		}
 
 		expect(trades.length).toBe(2);
+		expect(orderInBook).toBeNull();
 
 		expect(trades[0].price).toBe(98.19);
 		expect(trades[0].quantity).toBe(1.34876);
@@ -438,7 +474,7 @@ describe("LimitOrderBook (decimals)", () => {
 			orderBook.processOrder(order);
 		}
 
-		const { trades } = orderBook.processOrder({
+		const { trades, orderInBook } = orderBook.processOrder({
 			type: "limit",
 			side: "ask",
 			quantity: 6,
@@ -450,6 +486,9 @@ describe("LimitOrderBook (decimals)", () => {
 		}
 
 		expect(trades.length).toBe(2);
+		expect(orderInBook).not.toBeNull();
+		expect(orderInBook?.quantity).toBe(2.30623);
+		expect(orderInBook?.price).toBe(90.86);
 
 		expect(trades[0].price).toBe(98.19);
 		expect(trades[0].quantity).toBe(1.34876);
