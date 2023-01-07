@@ -72,18 +72,20 @@ export default class OrderBook extends EventEmitter2 {
 					quantityToTrade = 0;
 				} else if (headOrder.quantity.isEqualTo(quantityToTrade)) {
 					tradedQuantity = quantityToTrade;
-					if (side === "bid") this.bids.removeOrderById(headOrder.orderId);
-					else this.asks.removeOrderById(headOrder.orderId);
 					quantityToTrade = 0;
-				} else {
-					tradedQuantity = headOrder.quantity.toNumber();
 					if (side === "bid") {
 						this.bids.removeOrderById(headOrder.orderId);
 					} else {
 						this.asks.removeOrderById(headOrder.orderId);
 					}
-
+				} else {
+					tradedQuantity = headOrder.quantity.toNumber();
 					quantityToTrade = new BigNumber(quantityToTrade).minus(tradedQuantity).toNumber();
+					if (side === "bid") {
+						this.bids.removeOrderById(headOrder.orderId);
+					} else {
+						this.asks.removeOrderById(headOrder.orderId);
+					}
 				}
 
 				const tx = {
@@ -115,7 +117,7 @@ export default class OrderBook extends EventEmitter2 {
 	}
 
 	processMarketOrder(quote: Quote) {
-		const trades = [];
+		const trades: TransactionRecord[] = [];
 		let quantityToTrade = quote.quantity;
 		const { side } = quote;
 		switch (side) {
@@ -141,13 +143,13 @@ export default class OrderBook extends EventEmitter2 {
 				throw new Error(`processMarketOrder() received neither "bid" nor "ask"`);
 		}
 
-		return { 
+		return {
 			trades
 		}
 	}
 
 	processLimitOrder(quote: Quote) {
-		let orderInBook = null;
+		let orderInBook: Quote | null = null;
 		let createNewOrder = false;
 		const trades: Array<TransactionRecord> = [];
 		let quantityToTrade = quote.quantity;
