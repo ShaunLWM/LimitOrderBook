@@ -8,11 +8,13 @@ import type {
 	OrderSide,
 	Quote,
 	SimpleBook,
+	TimeInForce,
 	TransactionRecord,
 } from "../types/index.js";
 import type OrderList from "./OrderList.js";
 import OrderTree from "./OrderTree.js";
 
+/** Limit order book with price-time priority matching. */
 export default class OrderBook {
 	tape: Denque<TransactionRecord>;
 	bids: OrderTree;
@@ -20,6 +22,8 @@ export default class OrderBook {
 	emitter: EventEmitter2 | null;
 	private generateId: IdGenerator;
 
+	/** @param options.enableEvents Enable event emission (default: true). Set false for max throughput. */
+	/** @param options.idGenerator Custom ID generator function (default: monotonic counter). */
 	constructor(options?: OrderBookOptions) {
 		const enableEvents = options?.enableEvents ?? true;
 		this.generateId = options?.idGenerator ?? defaultIdGenerator;
@@ -56,6 +60,7 @@ export default class OrderBook {
 		return this;
 	}
 
+	/** Submit a limit or market order. Limit orders support timeInForce: GTC (default), IOC, or FOK. */
 	processOrder(qte: OrderQuote) {
 		const { type: orderType, quantity } = qte;
 		let orderInBook: Quote | null = null;
@@ -76,7 +81,8 @@ export default class OrderBook {
 				trades = this.processMarketOrder(quote).trades;
 				break;
 			case "limit": {
-				const result = this.processLimitOrder(quote);
+				const timeInForce = "timeInForce" in qte ? (qte.timeInForce ?? "GTC") : "GTC";
+				const result = this.processLimitOrder(quote, timeInForce);
 				trades = result.trades;
 				orderInBook = result.orderInBook;
 				break;
@@ -153,7 +159,7 @@ export default class OrderBook {
 		const { side } = quote;
 		switch (side) {
 			case "bid":
-				while (quantityToTrade > 0 && this.asks) {
+				while (quantityToTrade > 0 && this.asks.length > 0) {
 					const bestPriceAsks = this.asks.minPriceList();
 					const result = this.processOrderList("ask", bestPriceAsks, quantityToTrade, quote);
 					quantityToTrade = result.quantityToTrade;
@@ -162,7 +168,7 @@ export default class OrderBook {
 				break;
 
 			case "ask":
-				while (quantityToTrade > 0 && this.bids) {
+				while (quantityToTrade > 0 && this.bids.length > 0) {
 					const bestPriceBids = this.bids.maxPriceList();
 					const result = this.processOrderList("bid", bestPriceBids, quantityToTrade, quote);
 					quantityToTrade = result.quantityToTrade;
@@ -179,17 +185,42 @@ export default class OrderBook {
 		};
 	}
 
-	processLimitOrder(quote: Quote) {
+	private canFillCompletely(side: OrderSide, quantity: number, price: number): boolean {
+		let available = 0;
+		switch (side) {
+			case "bid":
+				this.asks.priceMap.forEachPair((askPrice, orderList) => {
+					if (askPrice > price) return { break: 0 };
+					available += orderList.volume;
+					if (available >= quantity) return { break: 0 };
+				});
+				break;
+			case "ask":
+				for (const [bidPrice, orderList] of this.bids.priceMap.entriesReversed()) {
+					if (bidPrice < price) break;
+					available += orderList.volume;
+					if (available >= quantity) break;
+				}
+				break;
+		}
+		return available >= quantity;
+	}
+
+	processLimitOrder(quote: Quote, timeInForce: TimeInForce = "GTC") {
 		let orderInBook: Quote | null = null;
 		let createNewOrder = false;
 		const trades: Array<TransactionRecord> = [];
 		let quantityToTrade = quote.quantity;
 		const { side, price } = quote;
 
+		if (timeInForce === "FOK" && !this.canFillCompletely(side, quantityToTrade, price)) {
+			return { trades, orderInBook };
+		}
+
 		switch (side) {
 			case "bid": {
 				let minPrice = this.asks.minPrice();
-				while (this.asks && minPrice && price >= minPrice && quantityToTrade > 0) {
+				while (minPrice && price >= minPrice && quantityToTrade > 0) {
 					const bestPriceAsks = this.asks.minPriceList();
 					const result = this.processOrderList("ask", bestPriceAsks, quantityToTrade, quote);
 					quantityToTrade = result.quantityToTrade;
@@ -198,7 +229,7 @@ export default class OrderBook {
 					createNewOrder = true;
 				}
 
-				if (quantityToTrade > 0) {
+				if (quantityToTrade > 0 && timeInForce === "GTC") {
 					const newQuote: Quote = {
 						...quote,
 						orderId: createNewOrder ? this.generateId() : quote.orderId,
@@ -213,7 +244,7 @@ export default class OrderBook {
 
 			case "ask": {
 				let maxPrice = this.bids.maxPrice();
-				while (this.bids && maxPrice && price <= maxPrice && quantityToTrade > 0) {
+				while (maxPrice && price <= maxPrice && quantityToTrade > 0) {
 					const bestPriceBids = this.bids.maxPriceList();
 					const result = this.processOrderList("bid", bestPriceBids, quantityToTrade, quote);
 					quantityToTrade = result.quantityToTrade;
@@ -222,7 +253,7 @@ export default class OrderBook {
 					createNewOrder = true;
 				}
 
-				if (quantityToTrade > 0) {
+				if (quantityToTrade > 0 && timeInForce === "GTC") {
 					const newQuote: Quote = {
 						...quote,
 						orderId: createNewOrder ? this.generateId() : quote.orderId,
@@ -245,6 +276,7 @@ export default class OrderBook {
 		};
 	}
 
+	/** Cancel an order by side and ID. No-op if the order does not exist. */
 	cancelOrder(side: OrderSide, orderId: string) {
 		switch (side) {
 			case "bid":
@@ -264,6 +296,7 @@ export default class OrderBook {
 		}
 	}
 
+	/** Modify an existing order's price/quantity. No-op if the order does not exist. */
 	modifyOrder(orderId: string, orderUpdate: Quote) {
 		const { side } = orderUpdate;
 		const updated: Quote = {
@@ -274,13 +307,13 @@ export default class OrderBook {
 
 		switch (side) {
 			case "bid":
-				if (this.bids.orderExists(updated)) {
+				if (this.bids.orderExists(orderId)) {
 					this.bids.updateOrder(updated);
 				}
 				break;
 
 			case "ask":
-				if (this.asks.orderExists(updated)) {
+				if (this.asks.orderExists(orderId)) {
 					this.asks.updateOrder(updated);
 				}
 				break;
@@ -290,6 +323,7 @@ export default class OrderBook {
 		}
 	}
 
+	/** Total volume at a given price level. Returns 0 if the price level does not exist. */
 	getVolumeAtPrice(side: OrderSide, price: number) {
 		let volume = 0;
 		switch (side) {
@@ -316,20 +350,101 @@ export default class OrderBook {
 		return volume;
 	}
 
+	/** Highest bid price, or null if no bids. */
 	getBestBid() {
 		return this.bids.maxPrice();
 	}
 
+	/** Lowest bid price, or null if no bids. */
 	getWorstBid() {
 		return this.bids.minPrice();
 	}
 
+	/** Lowest ask price, or null if no asks. */
 	getBestAsk() {
 		return this.asks.minPrice();
 	}
 
+	/** Highest ask price, or null if no asks. */
 	getWorstAsk() {
 		return this.asks.maxPrice();
+	}
+
+	/** Bid-ask spread (bestAsk - bestBid), or null if either side is empty. */
+	getSpread(): number | null {
+		const bestBid = this.getBestBid();
+		const bestAsk = this.getBestAsk();
+		if (bestBid === null || bestAsk === null) return null;
+		return roundFloat(bestAsk - bestBid);
+	}
+
+	/** Mid price ((bestBid + bestAsk) / 2), or null if either side is empty. */
+	getMidPrice(): number | null {
+		const bestBid = this.getBestBid();
+		const bestAsk = this.getBestAsk();
+		if (bestBid === null || bestAsk === null) return null;
+		return roundFloat((bestBid + bestAsk) / 2);
+	}
+
+	/** Top N price levels per side. Bids are sorted descending, asks ascending. Returns all levels if no limit given. */
+	getDepth(levels?: number): SimpleBook {
+		const bids: SimpleBook["bids"] = [];
+		for (const [price, orderList] of this.bids.priceMap.entriesReversed()) {
+			bids.push({ price, volume: orderList.volume });
+			if (levels !== undefined && bids.length >= levels) break;
+		}
+
+		const asks: SimpleBook["asks"] = [];
+		this.asks.priceMap.forEachPair((price, orderList) => {
+			asks.push({ price, volume: orderList.volume });
+			if (levels !== undefined && asks.length >= levels) return { break: 0 };
+		});
+
+		return { bids, asks };
+	}
+
+	/** Look up an order by ID. Returns the order as a Quote, or null if not found. */
+	getOrder(orderId: string): Quote | null {
+		const bidOrder = this.bids.getOrder(orderId);
+		if (bidOrder) {
+			return {
+				type: "limit",
+				side: "bid",
+				quantity: bidOrder.quantity,
+				price: bidOrder.price,
+				orderId: bidOrder.orderId,
+				time: bidOrder.time,
+			};
+		}
+		const askOrder = this.asks.getOrder(orderId);
+		if (askOrder) {
+			return {
+				type: "limit",
+				side: "ask",
+				quantity: askOrder.quantity,
+				price: askOrder.price,
+				orderId: askOrder.orderId,
+				time: askOrder.time,
+			};
+		}
+		return null;
+	}
+
+	/** Total number of resting orders in the book. */
+	getOrderCount(): number {
+		return this.bids.length + this.asks.length;
+	}
+
+	/** Number of distinct price levels. Optionally filter by side. */
+	getPriceLevelCount(side?: OrderSide): number {
+		switch (side) {
+			case "bid":
+				return this.bids.depth;
+			case "ask":
+				return this.asks.depth;
+			default:
+				return this.bids.depth + this.asks.depth;
+		}
 	}
 
 	getSimpleBids() {
@@ -348,6 +463,7 @@ export default class OrderBook {
 		return asks;
 	}
 
+	/** Aggregated bids and asks as { price, volume } arrays. */
 	getSimpleBook(): SimpleBook {
 		return { bids: this.getSimpleBids(), asks: this.getSimpleAsks() };
 	}

@@ -11,22 +11,22 @@ const BTree = ((SortedBTree as any).default ?? SortedBTree) as typeof SortedBTre
 export default class OrderTree {
 	priceMap: BTreeType<number, OrderList>;
 	orderMap: Map<string, Order>;
-	numOrders: number;
-	depth: number;
 	volume: number;
 	emitter: EventEmitter2 | null;
 
 	constructor(enableEvents = true) {
 		this.priceMap = new BTree<number, OrderList>(undefined, (a, b) => a - b);
 		this.orderMap = new Map();
-		this.numOrders = 0;
-		this.depth = 0;
 		this.volume = 0;
 		this.emitter = enableEvents ? new EventEmitter2({ wildcard: true, delimiter: ":" }) : null;
 	}
 
 	get length(): number {
 		return this.orderMap.size;
+	}
+
+	get depth(): number {
+		return this.priceMap.size;
 	}
 
 	getPriceList(price: number): OrderList | null {
@@ -42,13 +42,11 @@ export default class OrderTree {
 	}
 
 	createPrice(price: number) {
-		this.depth += 1;
 		this.priceMap.set(price, new OrderList());
 		this.emitter?.emit("price:new", { price });
 	}
 
 	removePrice(price: number) {
-		this.depth -= 1;
 		this.priceMap.delete(price);
 		this.emitter?.emit("price:remove", { price });
 	}
@@ -70,7 +68,6 @@ export default class OrderTree {
 			this.removeOrderById(quote.orderId);
 		}
 
-		this.numOrders += 1;
 		if (!this.priceMap.has(quote.price)) {
 			this.createPrice(quote.price);
 		}
@@ -112,7 +109,6 @@ export default class OrderTree {
 	}
 
 	removeOrderById(orderId: string) {
-		this.numOrders -= 1;
 		const order = this.orderMap.get(orderId);
 		if (!order) {
 			throw new Error("Order does not exist");
