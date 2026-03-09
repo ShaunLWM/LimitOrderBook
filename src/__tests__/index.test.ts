@@ -1,5 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as Helper from "../lib/Helper.js";
+import { beforeEach, describe, expect, it } from "vitest";
 import OrderBook from "../model/OrderBook.js";
 import type { LimitQuote } from "../types/index.js";
 
@@ -22,18 +21,8 @@ describe("LimitOrderBook", () => {
 	let orderBook: OrderBook;
 
 	beforeEach(() => {
-		const getUniqueIdSpy = vi.spyOn(Helper, "getUniqueId");
-		getUniqueIdSpy
-			.mockReturnValueOnce("1")
-			.mockReturnValueOnce("2")
-			.mockReturnValueOnce("3")
-			.mockReturnValueOnce("4")
-			.mockReturnValueOnce("5")
-			.mockReturnValueOnce("6")
-			.mockReturnValueOnce("7")
-			.mockReturnValueOnce("8");
-
-		orderBook = new OrderBook();
+		let counter = 0;
+		orderBook = new OrderBook({ idGenerator: () => String(++counter) });
 		const limitOrders: Array<LimitQuote> = [
 			{
 				type: "limit",
@@ -52,10 +41,6 @@ describe("LimitOrderBook", () => {
 		for (const order of limitOrders) {
 			orderBook.processOrder(order);
 		}
-	});
-
-	afterEach(() => {
-		vi.resetAllMocks();
 	});
 
 	it("Should throw an error when purchasing 0 quantity", () => {

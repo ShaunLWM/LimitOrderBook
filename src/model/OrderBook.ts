@@ -1,7 +1,15 @@
 import Denque from "denque";
 import { EventEmitter2 } from "eventemitter2";
-import { getCurrentUnix, getTxId, getUniqueId, roundFloat } from "../lib/Helper.js";
-import type { OrderBookOptions, OrderQuote, OrderSide, Quote, SimpleBook, TransactionRecord } from "../types/index.js";
+import { defaultIdGenerator, getCurrentUnix, roundFloat } from "../lib/Helper.js";
+import type {
+	IdGenerator,
+	OrderBookOptions,
+	OrderQuote,
+	OrderSide,
+	Quote,
+	SimpleBook,
+	TransactionRecord,
+} from "../types/index.js";
 import type OrderList from "./OrderList.js";
 import OrderTree from "./OrderTree.js";
 
@@ -10,9 +18,11 @@ export default class OrderBook {
 	bids: OrderTree;
 	asks: OrderTree;
 	emitter: EventEmitter2 | null;
+	private generateId: IdGenerator;
 
 	constructor(options?: OrderBookOptions) {
 		const enableEvents = options?.enableEvents ?? true;
+		this.generateId = options?.idGenerator ?? defaultIdGenerator;
 		this.tape = new Denque<TransactionRecord>();
 		this.bids = new OrderTree(enableEvents);
 		this.asks = new OrderTree(enableEvents);
@@ -58,7 +68,7 @@ export default class OrderBook {
 		const quote: Quote = {
 			...qte,
 			time: getCurrentUnix(),
-			orderId: getUniqueId(),
+			orderId: this.generateId(),
 		};
 
 		switch (orderType) {
@@ -117,7 +127,7 @@ export default class OrderBook {
 				}
 
 				const transactionRecord: TransactionRecord = {
-					txId: getTxId(),
+					txId: this.generateId(),
 					time: getCurrentUnix(),
 					price: tradedPrice,
 					quantity: tradedQuantity,
@@ -191,7 +201,7 @@ export default class OrderBook {
 				if (quantityToTrade > 0) {
 					const newQuote: Quote = {
 						...quote,
-						orderId: createNewOrder ? getUniqueId() : quote.orderId,
+						orderId: createNewOrder ? this.generateId() : quote.orderId,
 						quantity: quantityToTrade,
 					};
 					this.bids.insertOrder(newQuote);
@@ -215,7 +225,7 @@ export default class OrderBook {
 				if (quantityToTrade > 0) {
 					const newQuote: Quote = {
 						...quote,
-						orderId: createNewOrder ? getUniqueId() : quote.orderId,
+						orderId: createNewOrder ? this.generateId() : quote.orderId,
 						quantity: quantityToTrade,
 					};
 					this.asks.insertOrder(newQuote);

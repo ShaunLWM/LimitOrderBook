@@ -1,5 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as Helper from "../lib/Helper.js";
+import { beforeEach, describe, expect, it } from "vitest";
 import OrderBook from "../model/OrderBook.js";
 import type { LimitQuote } from "../types/index.js";
 
@@ -34,18 +33,8 @@ describe("LimitOrderBook (decimals)", () => {
 	let orderBook: OrderBook;
 
 	beforeEach(() => {
-		const getUniqueIdSpy = vi.spyOn(Helper, "getUniqueId");
-		getUniqueIdSpy
-			.mockReturnValueOnce("1")
-			.mockReturnValueOnce("2")
-			.mockReturnValueOnce("3")
-			.mockReturnValueOnce("4")
-			.mockReturnValueOnce("5")
-			.mockReturnValueOnce("6")
-			.mockReturnValueOnce("7")
-			.mockReturnValueOnce("8");
-
-		orderBook = new OrderBook();
+		let counter = 0;
+		orderBook = new OrderBook({ idGenerator: () => String(++counter) });
 		const limitOrders: Array<LimitQuote> = [
 			{
 				type: "limit",
@@ -64,10 +53,6 @@ describe("LimitOrderBook (decimals)", () => {
 		for (const order of limitOrders) {
 			orderBook.processOrder(order);
 		}
-	});
-
-	afterEach(() => {
-		vi.resetAllMocks();
 	});
 
 	it("Should throw an error when purchasing 0 quantity", () => {
@@ -230,7 +215,7 @@ describe("LimitOrderBook (decimals)", () => {
 		expect(orderInBook).not.toBeNull();
 		expect(orderInBook?.quantity).toBe(3.48986); // remaining quantity of 6.32461 - 2.83475
 		expect(orderInBook?.price).toBe(102.42);
-		expect(orderInBook?.orderId).toBe("6"); // 4 in order book, current 5, created 6
+		expect(orderInBook?.orderId).toBe("7"); // 4 in order book, orderId 5, txId 6, new orderId 7
 
 		expect(trades[0].price).toBe(102.42);
 		expect(trades[0].quantity).toBe(2.83475);
@@ -300,7 +285,7 @@ describe("LimitOrderBook (decimals)", () => {
 		expect(orderInBook).not.toBeNull();
 		expect(orderInBook?.quantity).toBe(1.25958); // remaining quantity of 6 - 1.90567 - 2.83475
 		expect(orderInBook?.price).toBe(120.33);
-		expect(orderInBook?.orderId).toBe("6"); // 4 in order book, current 5, created 6
+		expect(orderInBook?.orderId).toBe("8"); // 4 in order book, orderId 5, txId 6, txId 7, new orderId 8
 
 		expect(trades[0].price).toBe(102.42);
 		expect(trades[0].quantity).toBe(2.83475);

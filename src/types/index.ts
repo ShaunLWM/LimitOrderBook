@@ -45,6 +45,9 @@ export interface SimpleBook {
 	asks: SimpleBookRecord[];
 }
 
+export type IdGenerator = () => string;
+
 export type OrderBookOptions = {
 	enableEvents?: boolean;
+	idGenerator?: IdGenerator;
 };

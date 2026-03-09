@@ -1,10 +1,7 @@
-import { randomBytes } from "node:crypto";
-
 export const getCurrentUnix = () => Date.now();
 
-export const getUniqueId = () => randomBytes(5).toString("hex");
-
-export const getTxId = () => randomBytes(13).toString("hex");
+let idCounter = 0;
+export const defaultIdGenerator = (): string => String(++idCounter);
 
 const ROUND_DIGITS = 10;
 const ROUND_FACTOR = 10 ** ROUND_DIGITS;
