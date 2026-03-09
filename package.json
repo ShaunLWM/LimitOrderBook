@@ -1,7 +1,7 @@
 {
 	"name": "lob.js",
 	"packageManager": "pnpm@10.12.4",
-	"version": "0.0.2-alpha.9",
+	"version": "1.0.0",
 	"description": "A fast LimitOrderBook in Javascript.",
 	"type": "module",
 	"main": "dist/index.cjs",
@@ -27,7 +27,9 @@
 	"engines": {
 		"node": ">=20"
 	},
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"scripts": {
 		"build": "tsup",
 		"clean": "rm -rf dist",
@@ -53,7 +55,10 @@
 		"vitest": "^3.0.0"
 	},
 	"pnpm": {
-		"onlyBuiltDependencies": ["@biomejs/biome", "esbuild"]
+		"onlyBuiltDependencies": [
+			"@biomejs/biome",
+			"esbuild"
+		]
 	},
 	"keywords": [
 		"limitorderbook",
