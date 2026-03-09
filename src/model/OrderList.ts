@@ -1,15 +1,15 @@
-import BigNumber from "bignumber.js";
+import { roundFloat } from "../lib/Helper.js";
 import type Order from "./Order.js";
 
 export default class OrderList {
 	headOrder: Order | null = null;
 	tailOrder: Order | null = null;
 	length: number;
-	volume: BigNumber;
+	volume: number;
 
 	constructor() {
 		this.length = 0;
-		this.volume = new BigNumber(0);
+		this.volume = 0;
 	}
 
 	*[Symbol.iterator]() {
@@ -37,11 +37,11 @@ export default class OrderList {
 
 		this.tailOrder = order;
 		this.length += 1;
-		this.volume = this.volume.plus(order.quantity);
+		this.volume = roundFloat(this.volume + order.quantity);
 	}
 
 	removeOrder(order: Order) {
-		this.volume = this.volume.minus(order.quantity);
+		this.volume = roundFloat(this.volume - order.quantity);
 		this.length -= 1;
 		if (this.length === 0) return;
 		const { nextOrder, prevOrder } = order;

@@ -1,4 +1,4 @@
-import BigNumber from "bignumber.js";
+import { roundFloat } from "../lib/Helper.js";
 import type { OrderSide, OrderType, Quote } from "../types/index.js";
 import type OrderList from "./OrderList.js";
 
@@ -8,7 +8,7 @@ export default class Order {
 	readonly side: OrderSide;
 	readonly price: number;
 	time: number;
-	quantity: BigNumber;
+	quantity: number;
 
 	nextOrder: Order | null = null;
 	prevOrder: Order | null = null;
@@ -16,7 +16,7 @@ export default class Order {
 
 	constructor(quote: Quote, orderList: OrderList) {
 		this.time = quote.time;
-		this.quantity = new BigNumber(quote.quantity);
+		this.quantity = quote.quantity;
 		this.price = quote.price;
 		this.orderId = quote.orderId;
 		this.orderList = orderList;
@@ -26,16 +26,16 @@ export default class Order {
 
 	updateQuantity(quantity: number, timestamp: number) {
 		if (
-			this.quantity.isLessThan(quantity) &&
+			quantity > this.quantity &&
 			this.orderList.tailOrder !== null &&
 			this.orderList.tailOrder.toString() !== this.toString()
 		) {
 			this.orderList.moveToTail(this);
 		}
 
-		this.orderList.volume = this.orderList.volume.minus(this.quantity.minus(quantity));
+		this.orderList.volume = roundFloat(this.orderList.volume - (this.quantity - quantity));
 		this.time = timestamp;
-		this.quantity = new BigNumber(quantity);
+		this.quantity = quantity;
 	}
 
 	toString() {

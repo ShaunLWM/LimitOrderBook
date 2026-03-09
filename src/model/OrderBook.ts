@@ -1,7 +1,6 @@
-import BigNumber from "bignumber.js";
 import Denque from "denque";
 import { EventEmitter2 } from "eventemitter2";
-import { getCurrentUnix, getTxId, getUniqueId } from "../lib/Helper.js";
+import { getCurrentUnix, getTxId, getUniqueId, roundFloat } from "../lib/Helper.js";
 import type { OrderBookOptions, OrderQuote, OrderSide, Quote, SimpleBook, TransactionRecord } from "../types/index.js";
 import type OrderList from "./OrderList.js";
 import OrderTree from "./OrderTree.js";
@@ -93,12 +92,13 @@ export default class OrderBook {
 				let newBookQuantity: number | null = null;
 				let tradedQuantity: number | null = null;
 
-				if (headOrder.quantity.isGreaterThan(quantityToTrade)) {
+				const diff = roundFloat(headOrder.quantity - quantityToTrade);
+				if (diff > 0) {
 					tradedQuantity = quantityToTrade;
-					newBookQuantity = headOrder.quantity.minus(quantityToTrade).toNumber();
+					newBookQuantity = diff;
 					headOrder.updateQuantity(newBookQuantity, headOrder.time);
 					quantityToTrade = 0;
-				} else if (headOrder.quantity.isEqualTo(quantityToTrade)) {
+				} else if (diff === 0) {
 					tradedQuantity = quantityToTrade;
 					quantityToTrade = 0;
 					if (side === "bid") {
@@ -107,8 +107,8 @@ export default class OrderBook {
 						this.asks.removeOrderById(headOrder.orderId);
 					}
 				} else {
-					tradedQuantity = headOrder.quantity.toNumber();
-					quantityToTrade = new BigNumber(quantityToTrade).minus(tradedQuantity).toNumber();
+					tradedQuantity = headOrder.quantity;
+					quantityToTrade = roundFloat(quantityToTrade - tradedQuantity);
 					if (side === "bid") {
 						this.bids.removeOrderById(headOrder.orderId);
 					} else {
@@ -281,7 +281,7 @@ export default class OrderBook {
 	}
 
 	getVolumeAtPrice(side: OrderSide, price: number) {
-		let volume = new BigNumber(0);
+		let volume = 0;
 		switch (side) {
 			case "bid": {
 				const b = this.bids.getPrice(price);
@@ -325,7 +325,7 @@ export default class OrderBook {
 	getSimpleBids() {
 		const bids: SimpleBook["bids"] = [];
 		this.bids.priceMap.forEachPair((price, orderList) => {
-			bids.push({ price, volume: orderList.volume.toNumber() });
+			bids.push({ price, volume: orderList.volume });
 		});
 		return bids;
 	}
@@ -333,7 +333,7 @@ export default class OrderBook {
 	getSimpleAsks() {
 		const asks: SimpleBook["asks"] = [];
 		this.asks.priceMap.forEachPair((price, orderList) => {
-			asks.push({ price, volume: orderList.volume.toNumber() });
+			asks.push({ price, volume: orderList.volume });
 		});
 		return asks;
 	}

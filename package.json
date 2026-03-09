@@ -40,7 +40,6 @@
 		"bench": "vitest bench"
 	},
 	"dependencies": {
-		"bignumber.js": "^9.0.2",
 		"denque": "^2.0.1",
 		"eventemitter2": "^6.4.9",
 		"sorted-btree": "^2.1.0"
