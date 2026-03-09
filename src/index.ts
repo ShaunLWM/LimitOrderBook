@@ -12,4 +12,5 @@ export type {
 	SimpleBookRecord,
 	OrderBookOptions,
 	IdGenerator,
+	TimeInForce,
 } from "./types/index.js";

@@ -1,5 +1,6 @@
 export type OrderSide = "bid" | "ask";
 export type OrderType = "limit" | "market";
+export type TimeInForce = "GTC" | "IOC" | "FOK";
 
 export interface BaseQuote {
 	orderId: string;
@@ -11,6 +12,7 @@ export interface LimitQuote {
 	price: number;
 	side: OrderSide;
 	quantity: number;
+	timeInForce?: TimeInForce;
 }
 
 export interface MarketQuote {
