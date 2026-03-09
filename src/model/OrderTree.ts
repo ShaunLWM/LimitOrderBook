@@ -1,13 +1,14 @@
 import BigNumber from "bignumber.js";
 import { EventEmitter2 } from "eventemitter2";
 import { SortedDictionary } from "yaca";
-import Order from "./Order";
-import OrderList from "./OrderList";
+import type { Quote } from "../types/index.js";
+import Order from "./Order.js";
+import OrderList from "./OrderList.js";
 
 export default class OrderTree extends EventEmitter2 {
 	priceMap: SortedDictionary<number, OrderList>;
 	prices: Array<number>;
-	orderMap: { [orderId: string]: Order };
+	orderMap: Map<string, Order>;
 	numOrders: number;
 	depth: number;
 	volume: BigNumber;
@@ -16,14 +17,14 @@ export default class OrderTree extends EventEmitter2 {
 		super({ wildcard: true, delimiter: ":" });
 		this.priceMap = new SortedDictionary<number, OrderList>();
 		this.prices = this.priceMap.getKeys();
-		this.orderMap = {};
+		this.orderMap = new Map();
 		this.numOrders = 0;
 		this.depth = 0;
 		this.volume = new BigNumber(0);
 	}
 
 	get length(): number {
-		return Object.keys(this.orderMap).length;
+		return this.orderMap.size;
 	}
 
 	getPriceList(price: number): OrderList | null {
@@ -34,8 +35,8 @@ export default class OrderTree extends EventEmitter2 {
 		return this.priceMap.get(price);
 	}
 
-	getOrder(orderId: number) {
-		return this.orderMap[orderId];
+	getOrder(orderId: string) {
+		return this.orderMap.get(orderId);
 	}
 
 	updatePriceKeys() {
@@ -63,29 +64,30 @@ export default class OrderTree extends EventEmitter2 {
 
 	orderExists(order: Quote | string) {
 		if (typeof order === "string") {
-			return this.orderMap[order] !== undefined;
+			return this.orderMap.has(order);
 		}
 
-		return this.orderMap[order.orderId] !== undefined;
+		return this.orderMap.has(order.orderId);
 	}
 
 	insertOrder(quote: Quote) {
 		if (this.orderExists(quote)) this.removeOrderById(quote.orderId);
 		this.numOrders += 1;
 		if (!this.priceMap.containsKey(quote.price)) this.createPrice(quote.price);
-		const order = new Order(quote, this.priceMap.get(quote.price));
-		this.priceMap.get(order.price).appendOrder(order);
-		this.orderMap[order.orderId] = order;
+		const orderList = this.priceMap.get(quote.price);
+		const order = new Order(quote, orderList);
+		orderList.appendOrder(order);
+		this.orderMap.set(order.orderId, order);
 		this.volume = this.volume.plus(order.quantity);
 		this.updatePriceKeys();
 		this.emit("order:new", quote);
 	}
 
 	updateOrder(orderUpdate: Quote) {
-		const order = this.orderMap[orderUpdate.orderId];
+		const order = this.orderMap.get(orderUpdate.orderId);
+		if (!order) throw new Error("Order does not exist");
 		const { quantity: originalQuantity } = order;
 		if (orderUpdate.price !== order.price) {
-			// Price changed. Remove order and update tree.
 			const orderList = this.priceMap.get(order.price);
 			orderList.removeOrder(order);
 			if (orderList.length === 0) {
@@ -96,39 +98,39 @@ export default class OrderTree extends EventEmitter2 {
 			order.updateQuantity(orderUpdate.quantity, orderUpdate.time);
 		}
 
-		this.volume = this.volume.plus((order.quantity).minus(originalQuantity));
+		this.volume = this.volume.plus(order.quantity.minus(originalQuantity));
 		this.updatePriceKeys();
 		this.emit("order:update", orderUpdate);
 	}
 
 	removeOrderById(orderId: string) {
 		this.numOrders -= 1;
-		const order = this.orderMap[orderId];
+		const order = this.orderMap.get(orderId);
 		if (!order) throw new Error("Order does not exist");
 		this.volume = this.volume.minus(order.quantity);
 		order.orderList.removeOrder(order);
 		if (order.orderList.length === 0) {
 			this.removePrice(order.price);
-			delete this.orderMap[orderId];
+			this.orderMap.delete(orderId);
 		}
 
 		this.updatePriceKeys();
 		this.emit("order:remove", order);
 	}
 
-	maxPrice() {
-		if (this.depth > 0) return this.prices[this.prices.length - 1];
+	maxPrice(): number | null {
+		if (this.depth > 0) return this.prices[this.prices.length - 1] ?? null;
 		return null;
 	}
 
-	minPrice() {
-		if (this.depth > 0) return this.prices[0];
+	minPrice(): number | null {
+		if (this.depth > 0) return this.prices[0] ?? null;
 		return null;
 	}
 
 	maxPriceList() {
 		const maxPrice = this.maxPrice();
-		if (this.depth > 0 && maxPrice !== null) {
+		if (maxPrice !== null) {
 			return this.getPriceList(maxPrice);
 		}
 
@@ -137,7 +139,7 @@ export default class OrderTree extends EventEmitter2 {
 
 	minPriceList() {
 		const minPrice = this.minPrice();
-		if (this.depth > 0 && minPrice !== null) {
+		if (minPrice !== null) {
 			return this.getPriceList(minPrice);
 		}
 

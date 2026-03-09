@@ -1,11 +1,11 @@
 import BigNumber from "bignumber.js";
-import Order from "./Order";
+import type Order from "./Order.js";
 
 export default class OrderList {
 	headOrder: Order | null = null;
 	tailOrder: Order | null = null;
 	length: number;
-	volume: BigNumber ;
+	volume: BigNumber;
 
 	constructor() {
 		this.length = 0;
@@ -29,10 +29,10 @@ export default class OrderList {
 			order.nextOrder = null;
 			order.prevOrder = null;
 			this.headOrder = order;
-		} else {
+		} else if (this.tailOrder) {
 			order.prevOrder = this.tailOrder;
 			order.nextOrder = null;
-			this.tailOrder!.nextOrder = order;
+			this.tailOrder.nextOrder = order;
 		}
 
 		this.tailOrder = order;
@@ -58,14 +58,22 @@ export default class OrderList {
 	}
 
 	moveToTail(order: Order) {
-		if (order.prevOrder) order.prevOrder.nextOrder = order.nextOrder;
-		else this.headOrder = order.nextOrder;
+		if (order.prevOrder) {
+			order.prevOrder.nextOrder = order.nextOrder;
+		} else {
+			this.headOrder = order.nextOrder;
+		}
 
-		order.nextOrder!.prevOrder = order.prevOrder; // WARN
+		if (order.nextOrder) {
+			order.nextOrder.prevOrder = order.prevOrder;
+		}
+
 		order.prevOrder = this.tailOrder;
 		order.nextOrder = null;
 
-		this.tailOrder!.nextOrder = order;
+		if (this.tailOrder) {
+			this.tailOrder.nextOrder = order;
+		}
 		this.tailOrder = order;
 	}
 

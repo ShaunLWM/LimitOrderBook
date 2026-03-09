@@ -1,9 +1,10 @@
 import BigNumber from "bignumber.js";
 import Denque from "denque";
 import { EventEmitter2 } from "eventemitter2";
-import { getCurrentUnix, getTxId, getUniqueId } from "../lib/Helper";
-import OrderList from "./OrderList";
-import OrderTree from "./OrderTree";
+import { getCurrentUnix, getTxId, getUniqueId } from "../lib/Helper.js";
+import type { OrderQuote, OrderSide, Quote, SimpleBook, TransactionRecord } from "../types/index.js";
+import type OrderList from "./OrderList.js";
+import OrderTree from "./OrderTree.js";
 
 export default class OrderBook extends EventEmitter2 {
 	tape: Denque<TransactionRecord>;
@@ -25,7 +26,7 @@ export default class OrderBook extends EventEmitter2 {
 
 	processOrder(qte: OrderQuote) {
 		const { type: orderType, quantity } = qte;
-		let orderInBook = null;
+		let orderInBook: Quote | null = null;
 		let trades: TransactionRecord[] = [];
 
 		if (quantity <= 0) {
@@ -36,16 +37,20 @@ export default class OrderBook extends EventEmitter2 {
 			...qte,
 			time: getCurrentUnix(),
 			orderId: getUniqueId(),
-		}
+		};
 
-		if (orderType === "market") {
-			trades = this.processMarketOrder(quote).trades;
-		} else if (orderType === "limit") {
-			const result = this.processLimitOrder(quote);
-			trades = result.trades;
-			orderInBook = result.orderInBook;
-		} else {
-			throw new Error(`orderType for processOrder() is neither 'market' or 'limit'`);
+		switch (orderType) {
+			case "market":
+				trades = this.processMarketOrder(quote).trades;
+				break;
+			case "limit": {
+				const result = this.processLimitOrder(quote);
+				trades = result.trades;
+				orderInBook = result.orderInBook;
+				break;
+			}
+			default:
+				throw new Error(`orderType for processOrder() is neither 'market' or 'limit'`);
 		}
 
 		return {
@@ -88,23 +93,16 @@ export default class OrderBook extends EventEmitter2 {
 					}
 				}
 
-				const tx = {
+				const transactionRecord: TransactionRecord = {
 					txId: getTxId(),
 					time: getCurrentUnix(),
 					price: tradedPrice,
 					quantity: tradedQuantity,
-					from: counterParty,
-					to: quote.orderId,
-					side,
-				}
+					party1: { orderId: counterParty, side, quantity: tradedQuantity, price: tradedPrice },
+					party2: { orderId: quote.orderId, side: side === "ask" ? "bid" : "ask" },
+				};
 
-				this.emit("transaction:new", tx);
-
-				const transactionRecord: TransactionRecord = tx;
-
-				transactionRecord["party1"] = { orderId: counterParty, side, quantity: tradedQuantity, price: tradedPrice };
-				transactionRecord["party2"] = { orderId: quote.orderId, side: side === "ask" ? "bid" : "ask" };
-
+				this.emit("transaction:new", transactionRecord);
 				this.tape.push(transactionRecord);
 				trades.push(transactionRecord);
 			}
@@ -144,8 +142,8 @@ export default class OrderBook extends EventEmitter2 {
 		}
 
 		return {
-			trades
-		}
+			trades,
+		};
 	}
 
 	processLimitOrder(quote: Quote) {
@@ -156,7 +154,7 @@ export default class OrderBook extends EventEmitter2 {
 		const { side, price } = quote;
 
 		switch (side) {
-			case "bid":
+			case "bid": {
 				let minPrice = this.asks.minPrice();
 				while (this.asks && minPrice && price >= minPrice && quantityToTrade > 0) {
 					const bestPriceAsks = this.asks.minPriceList();
@@ -168,18 +166,19 @@ export default class OrderBook extends EventEmitter2 {
 				}
 
 				if (quantityToTrade > 0) {
-					// creating new order since we have not yet filled the order
-					if (createNewOrder) {
-						quote.orderId = getUniqueId();
-					}
-					quote.quantity = quantityToTrade;
-					this.bids.insertOrder(quote);
-					orderInBook = quote;
+					const newQuote: Quote = {
+						...quote,
+						orderId: createNewOrder ? getUniqueId() : quote.orderId,
+						quantity: quantityToTrade,
+					};
+					this.bids.insertOrder(newQuote);
+					orderInBook = newQuote;
 				}
 
 				break;
+			}
 
-			case "ask":
+			case "ask": {
 				let maxPrice = this.bids.maxPrice();
 				while (this.bids && maxPrice && price <= maxPrice && quantityToTrade > 0) {
 					const bestPriceBids = this.bids.maxPriceList();
@@ -191,15 +190,17 @@ export default class OrderBook extends EventEmitter2 {
 				}
 
 				if (quantityToTrade > 0) {
-					if (createNewOrder) {
-						quote.orderId = getUniqueId();
-					}
-					quote.quantity = quantityToTrade;
-					this.asks.insertOrder(quote);
-					orderInBook = quote;
+					const newQuote: Quote = {
+						...quote,
+						orderId: createNewOrder ? getUniqueId() : quote.orderId,
+						quantity: quantityToTrade,
+					};
+					this.asks.insertOrder(newQuote);
+					orderInBook = newQuote;
 				}
 
 				break;
+			}
 
 			default:
 				throw new Error(`processLimitOrder() given neither "bid" nor "ask"`);
@@ -226,25 +227,28 @@ export default class OrderBook extends EventEmitter2 {
 				break;
 
 			default:
-				throw new Error("cancelOrder given neither 'bid' nor 'ask'")
+				throw new Error("cancelOrder given neither 'bid' nor 'ask'");
 		}
 	}
 
 	modifyOrder(orderId: string, orderUpdate: Quote) {
 		const { side } = orderUpdate;
-		orderUpdate.orderId = orderId;
-		orderUpdate.time = getCurrentUnix();
+		const updated: Quote = {
+			...orderUpdate,
+			orderId,
+			time: getCurrentUnix(),
+		};
 
 		switch (side) {
 			case "bid":
-				if (this.bids.orderExists(orderUpdate)) {
-					this.bids.updateOrder(orderUpdate);
+				if (this.bids.orderExists(updated)) {
+					this.bids.updateOrder(updated);
 				}
 				break;
 
 			case "ask":
-				if (this.asks.orderExists(orderUpdate)) {
-					this.asks.updateOrder(orderUpdate);
+				if (this.asks.orderExists(updated)) {
+					this.asks.updateOrder(updated);
 				}
 				break;
 
@@ -256,19 +260,21 @@ export default class OrderBook extends EventEmitter2 {
 	getVolumeAtPrice(side: OrderSide, price: number) {
 		let volume: BigNumber = new BigNumber(0);
 		switch (side) {
-			case "bid":
+			case "bid": {
 				const b = this.bids.getPrice(price);
 				if (this.bids.priceExists(price) && b) {
 					volume = b.volume;
 				}
 				break;
+			}
 
-			case "ask":
+			case "ask": {
 				const a = this.asks.getPrice(price);
 				if (this.asks.priceExists(price) && a) {
 					volume = a.volume;
 				}
 				break;
+			}
 
 			default:
 				throw new Error(`getVolumeAtPrice() given neither "bid" nor "ask"`);
@@ -295,13 +301,19 @@ export default class OrderBook extends EventEmitter2 {
 
 	getSimpleBids() {
 		const bids: SimpleBook["bids"] = [];
-		this.bids.priceMap.forEach(order => bids.push({ price: order.key, volume: this.getVolumeAtPrice("bid", order.key).toNumber() }));
+		// biome-ignore lint/complexity/noForEach: SortedDictionary is not iterable
+		this.bids.priceMap.forEach((order) => {
+			bids.push({ price: order.key, volume: this.getVolumeAtPrice("bid", order.key).toNumber() });
+		});
 		return bids;
 	}
 
 	getSimpleAsks() {
 		const asks: SimpleBook["asks"] = [];
-		this.asks.priceMap.forEach(order => asks.push({ price: order.key, volume: this.getVolumeAtPrice("ask", order.key).toNumber() }));
+		// biome-ignore lint/complexity/noForEach: SortedDictionary is not iterable
+		this.asks.priceMap.forEach((order) => {
+			asks.push({ price: order.key, volume: this.getVolumeAtPrice("ask", order.key).toNumber() });
+		});
 		return asks;
 	}
 
@@ -312,20 +324,26 @@ export default class OrderBook extends EventEmitter2 {
 	toString() {
 		let str = "\n*** Asks (btm small) ***\n";
 		if (this.asks && this.asks.length > 0) {
-			this.asks.priceMap.forEach((order) => (str += order.value.toString()));
+			// biome-ignore lint/complexity/noForEach: SortedDictionary is not iterable
+			this.asks.priceMap.forEach((order) => {
+				str += order.value.toString();
+			});
 		}
 
 		str += "\n*** Bids (top big) ***\n";
 		if (this.bids && this.bids.length > 0) {
-			this.bids.priceMap.forEach((order) => (str += order.value.toString()));
+			// biome-ignore lint/complexity/noForEach: SortedDictionary is not iterable
+			this.bids.priceMap.forEach((order) => {
+				str += order.value.toString();
+			});
 		}
 
 		str += "\n***Transactions (first 10)***\n";
 		if (this.tape && this.tape.length > 0) {
 			let num = 0;
-			for (let entry of this.tape.toArray()) {
+			for (const entry of this.tape.toArray()) {
 				if (num < 10) {
-					str += `Trans: ${entry.price}x${entry.quantity} From: ${entry.party1?.orderId}, To: ${entry.party2?.orderId}\n`;
+					str += `Trans: ${entry.price}x${entry.quantity} From: ${entry.party1.orderId}, To: ${entry.party2.orderId}\n`;
 					num += 1;
 				} else break;
 			}

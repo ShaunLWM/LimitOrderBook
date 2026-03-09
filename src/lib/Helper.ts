@@ -1,7 +1,7 @@
-import hexoid from "hexoid";
+import { randomBytes } from "node:crypto";
 
-export const getCurrentUnix = () => Date.now()
+export const getCurrentUnix = () => Date.now();
 
-export const getUniqueId = () => hexoid(10)();
+export const getUniqueId = () => randomBytes(5).toString("hex");
 
-export const getTxId = () => hexoid(25)();
+export const getTxId = () => randomBytes(13).toString("hex");
