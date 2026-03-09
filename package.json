@@ -2,39 +2,57 @@
 	"name": "lob.js",
 	"version": "0.0.2-alpha.9",
 	"description": "A fast LimitOrderBook in Javascript.",
-	"main": "dist/index.js",
+	"type": "module",
+	"main": "dist/index.cjs",
+	"module": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": {
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
+			},
+			"require": {
+				"types": "./dist/index.d.cts",
+				"default": "./dist/index.cjs"
+			}
+		}
+	},
 	"repository": "git@github.com:ShaunLWM/LimitOrderBook.git",
 	"homepage": "https://github.com/ShaunLWM/LimitOrderBook",
 	"author": "ShaunLWM",
 	"license": "MIT",
-	"files": [
-		"dist",
-		"src/types/index.d.ts"
-	],
+	"sideEffects": false,
+	"engines": {
+		"node": ">=20"
+	},
+	"files": ["dist"],
 	"scripts": {
-		"start": "yarn watch",
-		"watch": "tsc -w",
-		"build": "tsc",
-		"prepublishOnly": "npm run copy && tsc",
-		"copy": "rm -rf dist",
-		"test": "jest",
-		"test:coverage": "jest --coverage --collectCoverage"
+		"build": "tsup",
+		"clean": "rm -rf dist",
+		"prepublishOnly": "pnpm run clean && pnpm run build",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:coverage": "vitest run --coverage",
+		"typecheck": "tsc --noEmit",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write ."
 	},
 	"dependencies": {
 		"bignumber.js": "^9.0.2",
 		"denque": "^2.0.1",
-		"eventemitter2": "^6.4.6",
-		"hexoid": "^1.0.0",
+		"eventemitter2": "^6.4.9",
 		"yaca": "^1.2.3"
 	},
 	"devDependencies": {
-		"@types/jest": "^28.1.4",
-		"@types/node": "^18.0.0",
-		"jest": "^28.1.2",
-		"ts-jest": "^28.0.5",
-		"ts-node": "^10.8.2",
-		"typescript": "^4.7.4"
+		"@biomejs/biome": "^1.9.0",
+		"@types/node": "^25.3.5",
+		"tsup": "^8.0.0",
+		"typescript": "^5.7.0",
+		"vitest": "^3.0.0"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": ["@biomejs/biome", "esbuild"]
 	},
 	"keywords": [
 		"limitorderbook",
