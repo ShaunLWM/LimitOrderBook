@@ -1,20 +1,19 @@
-import OrderBook from "../model/OrderBook";
-import * as Helper from "../lib/Helper";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as Helper from "../lib/Helper.js";
+import OrderBook from "../model/OrderBook.js";
+import type { LimitQuote } from "../types/index.js";
 
 /*
 During each test, the LOB should be as follows
 
 SELL/ASK
 105.64 x 1.90567
-102.42 x 2.83475	
+102.42 x 2.83475
 
 BUY/BID
 98.19 x 1.34876
 95.88 x 2.34501
 */
-
-
-
 
 const EXTERNAL_ORDERS: LimitQuote[] = [
 	{
@@ -35,8 +34,16 @@ describe("LimitOrderBook (decimals)", () => {
 	let orderBook: OrderBook;
 
 	beforeEach(() => {
-		const getUniqueIdSpy = jest.spyOn(Helper, 'getUniqueId');
-		getUniqueIdSpy.mockReturnValueOnce("1").mockReturnValueOnce("2").mockReturnValueOnce("3").mockReturnValueOnce("4").mockReturnValueOnce("5").mockReturnValueOnce("6").mockReturnValueOnce("7").mockReturnValueOnce("8");
+		const getUniqueIdSpy = vi.spyOn(Helper, "getUniqueId");
+		getUniqueIdSpy
+			.mockReturnValueOnce("1")
+			.mockReturnValueOnce("2")
+			.mockReturnValueOnce("3")
+			.mockReturnValueOnce("4")
+			.mockReturnValueOnce("5")
+			.mockReturnValueOnce("6")
+			.mockReturnValueOnce("7")
+			.mockReturnValueOnce("8");
 
 		orderBook = new OrderBook();
 		const limitOrders: Array<LimitQuote> = [
@@ -60,34 +67,40 @@ describe("LimitOrderBook (decimals)", () => {
 	});
 
 	afterEach(() => {
-		jest.resetAllMocks();
+		vi.resetAllMocks();
 	});
 
 	it("Should throw an error when purchasing 0 quantity", () => {
-		expect(() => orderBook.processOrder({
-			type: "limit",
-			side: "ask",
-			quantity: 0,
-			price: 105,
-		})).toThrow("quantity must be greater than 0");
+		expect(() =>
+			orderBook.processOrder({
+				type: "limit",
+				side: "ask",
+				quantity: 0,
+				price: 105,
+			}),
+		).toThrow("quantity must be greater than 0");
 	});
 
 	it("Should throw an error when type is not 'market' or 'limit'", () => {
-		expect(() => orderBook.processOrder({
-			type: "ERROR",
-			side: "bid",
-			quantity: 10,
-			price: 105,
-		} as any)).toThrow("orderType for processOrder() is neither 'market' or 'limit'");
+		expect(() =>
+			orderBook.processOrder({
+				type: "ERROR",
+				side: "bid",
+				quantity: 10,
+				price: 105,
+			} as any),
+		).toThrow("orderType for processOrder() is neither 'market' or 'limit'");
 	});
 
 	it("Should throw an error when side is not 'bid' or 'ask'", () => {
-		expect(() => orderBook.processOrder({
-			type: "limit",
-			side: "ERROR",
-			quantity: 10,
-			price: 105,
-		} as any)).toThrow('processLimitOrder() given neither "bid" nor "ask"');
+		expect(() =>
+			orderBook.processOrder({
+				type: "limit",
+				side: "ERROR",
+				quantity: 10,
+				price: 105,
+			} as any),
+		).toThrow('processLimitOrder() given neither "bid" nor "ask"');
 	});
 
 	it("Should properly show the best and worst Bids and Asks", () => {
@@ -105,7 +118,7 @@ describe("LimitOrderBook (decimals)", () => {
 	it("Should successfully add 1 normal limit order each for Bids and Asks", () => {
 		for (const order of EXTERNAL_ORDERS) {
 			const results = orderBook.processOrder(order);
-			expect(results.trades.length).toBe(0); // No trades should be made
+			expect(results.trades.length).toBe(0);
 			expect(results.orderInBook?.quantity).toBe(order.quantity);
 			expect(results.orderInBook?.price).toBe(order.price);
 		}
@@ -139,17 +152,13 @@ describe("LimitOrderBook (decimals)", () => {
 			price: 103.01,
 		});
 
-		if (!trades) {
-			throw new Error("Shouldn't crash");
-		}
-
 		expect(trades.length).toBe(1);
-		expect(orderInBook).toBeNull(); // No order should be left in the book since all trades are processed
+		expect(orderInBook).toBeNull();
 
 		expect(trades[0].price).toBe(102.42);
 		expect(trades[0].quantity).toBe(0.57216);
-		expect(trades[0].party1!.orderId).toBe("3"); // bought from orderId 3
-		expect(trades[0].party1!.quantity).toBe(0.57216); // bought 0.57216 quantity
+		expect(trades[0].party1.orderId).toBe("3"); // bought from orderId 3
+		expect(trades[0].party1.quantity).toBe(0.57216); // bought 0.57216 quantity
 
 		// nothing changed for Bids
 		expect(orderBook.getBestBid()).toBe(98.19);
@@ -181,17 +190,13 @@ describe("LimitOrderBook (decimals)", () => {
 			price: 102.42,
 		});
 
-		if (!trades) {
-			throw new Error("Shouldn't crash"); 1
-		}
-
 		expect(trades.length).toBe(1);
 		expect(orderInBook).toBeNull();
 
 		expect(trades[0].price).toBe(102.42);
 		expect(trades[0].quantity).toBe(2.83475);
-		expect(trades[0].party1!.orderId).toBe("3"); // bought from orderId 3
-		expect(trades[0].party1!.quantity).toBe(2.83475); // bought 2.83475 item
+		expect(trades[0].party1.orderId).toBe("3"); // bought from orderId 3
+		expect(trades[0].party1.quantity).toBe(2.83475); // bought 2.83475 item
 
 		expect(orderBook.getBestBid()).toBe(98.19);
 		expect(orderBook.getWorstBid()).toBe(95.88);
@@ -221,20 +226,16 @@ describe("LimitOrderBook (decimals)", () => {
 			price: 102.42,
 		});
 
-		if (!trades) {
-			throw new Error("Shouldn't crash");
-		}
-
 		expect(trades.length).toBe(1);
 		expect(orderInBook).not.toBeNull();
-		expect(orderInBook!.quantity).toBe(3.48986); // remaining quantity of 6.32461 - 2.83475
+		expect(orderInBook?.quantity).toBe(3.48986); // remaining quantity of 6.32461 - 2.83475
 		expect(orderInBook?.price).toBe(102.42);
 		expect(orderInBook?.orderId).toBe("6"); // 4 in order book, current 5, created 6
 
 		expect(trades[0].price).toBe(102.42);
 		expect(trades[0].quantity).toBe(2.83475);
-		expect(trades[0].party1!.orderId).toBe("3"); // bought from orderId 3
-		expect(trades[0].party1!.quantity).toBe(2.83475); // bought 2.83475 item
+		expect(trades[0].party1.orderId).toBe("3"); // bought from orderId 3
+		expect(trades[0].party1.quantity).toBe(2.83475); // bought 2.83475 item
 
 		expect(orderBook.getBestBid()).toBe(102.42); // remaining bids became a new Bid order
 		expect(orderBook.getWorstBid()).toBe(95.88);
@@ -262,22 +263,18 @@ describe("LimitOrderBook (decimals)", () => {
 			price: 120.52,
 		});
 
-		if (!trades) {
-			throw new Error("Shouldn't crash");
-		}
-
 		expect(trades.length).toBe(2);
 		expect(orderInBook).toBeNull();
 
 		expect(trades[0].price).toBe(102.42);
 		expect(trades[0].quantity).toBe(2.83475);
-		expect(trades[0].party1!.orderId).toBe("3"); // bought from orderId 3
-		expect(trades[0].party1!.quantity).toBe(2.83475); // bought 2.83475 
+		expect(trades[0].party1.orderId).toBe("3"); // bought from orderId 3
+		expect(trades[0].party1.quantity).toBe(2.83475); // bought 2.83475
 
 		expect(trades[1].price).toBe(105.64);
 		expect(trades[1].quantity).toBe(1.90567);
-		expect(trades[1].party1!.orderId).toBe("1"); // bought from orderId 1
-		expect(trades[1].party1!.quantity).toBe(1.90567); // bought 1.90567
+		expect(trades[1].party1.orderId).toBe("1"); // bought from orderId 1
+		expect(trades[1].party1.quantity).toBe(1.90567); // bought 1.90567
 
 		expect(orderBook.getBestBid()).toBe(98.19);
 		expect(orderBook.getWorstBid()).toBe(95.88);
@@ -298,26 +295,22 @@ describe("LimitOrderBook (decimals)", () => {
 			price: 120.33,
 		});
 
-		if (!trades) {
-			throw new Error("Shouldn't crash");
-		}
-
 		expect(trades.length).toBe(2);
 
 		expect(orderInBook).not.toBeNull();
-		expect(orderInBook!.quantity).toBe(1.25958); // remaining quantity of 6 - 1.90567 - 2.83475
+		expect(orderInBook?.quantity).toBe(1.25958); // remaining quantity of 6 - 1.90567 - 2.83475
 		expect(orderInBook?.price).toBe(120.33);
 		expect(orderInBook?.orderId).toBe("6"); // 4 in order book, current 5, created 6
 
 		expect(trades[0].price).toBe(102.42);
 		expect(trades[0].quantity).toBe(2.83475);
-		expect(trades[0].party1!.orderId).toBe("3"); // bought from orderId 3
-		expect(trades[0].party1!.quantity).toBe(2.83475); // bought 2.83475 
+		expect(trades[0].party1.orderId).toBe("3"); // bought from orderId 3
+		expect(trades[0].party1.quantity).toBe(2.83475); // bought 2.83475
 
 		expect(trades[1].price).toBe(105.64);
 		expect(trades[1].quantity).toBe(1.90567);
-		expect(trades[1].party1!.orderId).toBe("1"); // bought from orderId 1
-		expect(trades[1].party1!.quantity).toBe(1.90567); // bought 1.90567
+		expect(trades[1].party1.orderId).toBe("1"); // bought from orderId 1
+		expect(trades[1].party1.quantity).toBe(1.90567); // bought 1.90567
 
 		expect(orderBook.getBestBid()).toBe(120.33);
 		expect(orderBook.getWorstBid()).toBe(95.88);
@@ -337,17 +330,13 @@ describe("LimitOrderBook (decimals)", () => {
 			price: 98.19,
 		});
 
-		if (!trades) {
-			throw new Error("Shouldn't crash"); 1
-		}
-
 		expect(trades.length).toBe(1);
-		expect(orderInBook).toBeNull(); // buyer only selling 0.82565 to someone buying 1.345876
+		expect(orderInBook).toBeNull();
 
 		expect(trades[0].price).toBe(98.19);
 		expect(trades[0].quantity).toBe(0.82565);
-		expect(trades[0].party1!.orderId).toBe("4"); // sold to 4
-		expect(trades[0].party1!.quantity).toBe(0.82565); // sold 0.82565
+		expect(trades[0].party1.orderId).toBe("4"); // sold to 4
+		expect(trades[0].party1.quantity).toBe(0.82565); // sold 0.82565
 
 		expect(orderBook.getBestBid()).toBe(98.19);
 		expect(orderBook.getWorstBid()).toBe(95.88);
@@ -374,17 +363,13 @@ describe("LimitOrderBook (decimals)", () => {
 			price: 98.19,
 		});
 
-		if (!trades) {
-			throw new Error("Shouldn't crash");
-		}
-
 		expect(trades.length).toBe(1);
 		expect(orderInBook).toBeNull();
 
 		expect(trades[0].price).toBe(98.19);
 		expect(trades[0].quantity).toBe(1.34876);
-		expect(trades[0].party1!.orderId).toBe("4"); // sold to 4
-		expect(trades[0].party1!.quantity).toBe(1.34876); // sold 1.34876
+		expect(trades[0].party1.orderId).toBe("4"); // sold to 4
+		expect(trades[0].party1.quantity).toBe(1.34876); // sold 1.34876
 
 		expect(orderBook.getBestBid()).toBe(95.88); // bought all 98
 		expect(orderBook.getWorstBid()).toBe(95.88);
@@ -409,10 +394,6 @@ describe("LimitOrderBook (decimals)", () => {
 			price: 98.19,
 		});
 
-		if (!trades) {
-			throw new Error("Shouldn't crash");
-		}
-
 		expect(trades.length).toBe(1);
 		expect(orderInBook).not.toBeNull();
 		expect(orderInBook?.quantity).toBe(4.65124);
@@ -420,8 +401,8 @@ describe("LimitOrderBook (decimals)", () => {
 
 		expect(trades[0].price).toBe(98.19);
 		expect(trades[0].quantity).toBe(1.34876);
-		expect(trades[0].party1!.orderId).toBe("4"); // sold to orderId 4
-		expect(trades[0].party1!.quantity).toBe(1.34876); // sold 2 item
+		expect(trades[0].party1.orderId).toBe("4"); // sold to orderId 4
+		expect(trades[0].party1.quantity).toBe(1.34876); // sold 2 item
 
 		expect(orderBook.getBestBid()).toBe(95.88); // bought all 98.19
 		expect(orderBook.getWorstBid()).toBe(95.88);
@@ -446,22 +427,18 @@ describe("LimitOrderBook (decimals)", () => {
 			price: 90,
 		});
 
-		if (!trades) {
-			throw new Error("Shouldn't crash");
-		}
-
 		expect(trades.length).toBe(2);
 		expect(orderInBook).toBeNull();
 
 		expect(trades[0].price).toBe(98.19);
 		expect(trades[0].quantity).toBe(1.34876);
-		expect(trades[0].party1!.orderId).toBe("4"); // sold to orderId 3
-		expect(trades[0].party1!.quantity).toBe(1.34876); // bought 1.34876
+		expect(trades[0].party1.orderId).toBe("4"); // sold to orderId 3
+		expect(trades[0].party1.quantity).toBe(1.34876); // bought 1.34876
 
 		expect(trades[1].price).toBe(95.88);
 		expect(trades[1].quantity).toBe(2.34501);
-		expect(trades[1].party1!.orderId).toBe("2"); // sold to orderId 2
-		expect(trades[1].party1!.quantity).toBe(2.34501); // bought 2.34501
+		expect(trades[1].party1.orderId).toBe("2"); // sold to orderId 2
+		expect(trades[1].party1.quantity).toBe(2.34501); // bought 2.34501
 
 		expect(orderBook.getBestBid()).toBe(null);
 		expect(orderBook.getWorstBid()).toBe(null);
@@ -481,10 +458,6 @@ describe("LimitOrderBook (decimals)", () => {
 			price: 90.86,
 		});
 
-		if (!trades) {
-			throw new Error("Shouldn't crash");
-		}
-
 		expect(trades.length).toBe(2);
 		expect(orderInBook).not.toBeNull();
 		expect(orderInBook?.quantity).toBe(2.30623);
@@ -492,13 +465,13 @@ describe("LimitOrderBook (decimals)", () => {
 
 		expect(trades[0].price).toBe(98.19);
 		expect(trades[0].quantity).toBe(1.34876);
-		expect(trades[0].party1!.orderId).toBe("4"); // sold to orderId 3
-		expect(trades[0].party1!.quantity).toBe(1.34876); // bought 2 item
+		expect(trades[0].party1.orderId).toBe("4"); // sold to orderId 3
+		expect(trades[0].party1.quantity).toBe(1.34876); // bought 2 item
 
 		expect(trades[1].price).toBe(95.88);
 		expect(trades[1].quantity).toBe(2.34501);
-		expect(trades[1].party1!.orderId).toBe("2"); // sold to orderId 2
-		expect(trades[1].party1!.quantity).toBe(2.34501); // bought 2 item
+		expect(trades[1].party1.orderId).toBe("2"); // sold to orderId 2
+		expect(trades[1].party1.quantity).toBe(2.34501); // bought 2 item
 
 		expect(orderBook.getBestBid()).toBe(null);
 		expect(orderBook.getWorstBid()).toBe(null);
