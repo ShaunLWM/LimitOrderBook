@@ -17,9 +17,9 @@ importers:
       eventemitter2:
         specifier: ^6.4.9
         version: 6.4.9
-      yaca:
-        specifier: ^1.2.3
-        version: 1.2.3
+      sorted-btree:
+        specifier: ^2.1.0
+        version: 2.1.0
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.9.0
@@ -545,10 +545,6 @@ packages:
     resolution: {integrity: sha512-IXO6OCs9yg8tMKzfPZ1YmheJbZCiEsnBdcB03l0OcfK9prKnJb96siuHCr5Fl37/yo9DnKU+TLpxzTUspw9shg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  lodash.isequal@4.5.0:
-    resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
-    deprecated: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
-
   loupe@3.2.1:
     resolution: {integrity: sha512-CdzqowRJCeLU72bHvWqwRBBlLcMEtIvGrlvef74kMnV2AolS9Y8xUv1I0U/MNAWMhBlKIoyuEgoJ0t/bbwHbLQ==}
 
@@ -631,6 +627,9 @@ packages:
 
   siginfo@2.0.0:
     resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}
+
+  sorted-btree@2.1.0:
+    resolution: {integrity: sha512-AtYXy3lL+5jrATpbymC2bM8anN/3maLkmVCd94MzypnKjokfCid/zeS3rvXedv7W6ffSfqKIGdz3UaJPWRBZ0g==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -797,10 +796,6 @@ packages:
     resolution: {integrity: sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w==}
     engines: {node: '>=8'}
     hasBin: true
-
-  yaca@1.2.3:
-    resolution: {integrity: sha512-tcOJ3N2CKgRVdnT1o0KpjwJJFu8iJBBLN15MPdl4tKKHXnSLcFNplg6ITbx84KHLy5HsaXQhghF9JmQv7aMM0A==}
-    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
 snapshots:
 
@@ -1166,8 +1161,6 @@ snapshots:
 
   load-tsconfig@0.2.5: {}
 
-  lodash.isequal@4.5.0: {}
-
   loupe@3.2.1: {}
 
   magic-string@0.30.21:
@@ -1257,6 +1250,8 @@ snapshots:
       fsevents: 2.3.3
 
   siginfo@2.0.0: {}
+
+  sorted-btree@2.1.0: {}
 
   source-map-js@1.2.1: {}
 
@@ -1419,7 +1414,3 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
-
-  yaca@1.2.3:
-    dependencies:
-      lodash.isequal: 4.5.0

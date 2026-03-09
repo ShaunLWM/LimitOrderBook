@@ -10,4 +10,5 @@ export type {
 	TransactionPartyDetail,
 	SimpleBook,
 	SimpleBookRecord,
+	OrderBookOptions,
 } from "./types/index.js";

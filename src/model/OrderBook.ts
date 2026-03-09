@@ -2,26 +2,49 @@ import BigNumber from "bignumber.js";
 import Denque from "denque";
 import { EventEmitter2 } from "eventemitter2";
 import { getCurrentUnix, getTxId, getUniqueId } from "../lib/Helper.js";
-import type { OrderQuote, OrderSide, Quote, SimpleBook, TransactionRecord } from "../types/index.js";
+import type { OrderBookOptions, OrderQuote, OrderSide, Quote, SimpleBook, TransactionRecord } from "../types/index.js";
 import type OrderList from "./OrderList.js";
 import OrderTree from "./OrderTree.js";
 
-export default class OrderBook extends EventEmitter2 {
+export default class OrderBook {
 	tape: Denque<TransactionRecord>;
 	bids: OrderTree;
 	asks: OrderTree;
+	emitter: EventEmitter2 | null;
 
-	constructor() {
-		super({ wildcard: true, delimiter: ":" });
+	constructor(options?: OrderBookOptions) {
+		const enableEvents = options?.enableEvents ?? true;
 		this.tape = new Denque<TransactionRecord>();
-		this.bids = new OrderTree();
-		this.asks = new OrderTree();
-		this.setupListeners();
+		this.bids = new OrderTree(enableEvents);
+		this.asks = new OrderTree(enableEvents);
+		this.emitter = enableEvents ? new EventEmitter2({ wildcard: true, delimiter: ":" }) : null;
+		if (this.emitter) {
+			this.setupListeners();
+		}
 	}
 
 	setupListeners() {
-		this.bids.onAny((event, value) => this.emit(event, value));
-		this.asks.onAny((event, value) => this.emit(event, value));
+		this.bids.emitter?.onAny((event, value) => this.emitter?.emit(event, value));
+		this.asks.emitter?.onAny((event, value) => this.emitter?.emit(event, value));
+	}
+
+	on(event: string, listener: (...args: unknown[]) => void) {
+		this.emitter?.on(event, listener);
+		return this;
+	}
+
+	off(event: string, listener: (...args: unknown[]) => void) {
+		this.emitter?.off(event, listener);
+		return this;
+	}
+
+	emit(event: string, ...args: unknown[]) {
+		return this.emitter?.emit(event, ...args) ?? false;
+	}
+
+	onAny(listener: (event: string | string[], ...args: unknown[]) => void) {
+		this.emitter?.onAny(listener);
+		return this;
 	}
 
 	processOrder(qte: OrderQuote) {
@@ -102,7 +125,7 @@ export default class OrderBook extends EventEmitter2 {
 					party2: { orderId: quote.orderId, side: side === "ask" ? "bid" : "ask" },
 				};
 
-				this.emit("transaction:new", transactionRecord);
+				this.emitter?.emit("transaction:new", transactionRecord);
 				this.tape.push(transactionRecord);
 				trades.push(transactionRecord);
 			}
@@ -258,7 +281,7 @@ export default class OrderBook extends EventEmitter2 {
 	}
 
 	getVolumeAtPrice(side: OrderSide, price: number) {
-		let volume: BigNumber = new BigNumber(0);
+		let volume = new BigNumber(0);
 		switch (side) {
 			case "bid": {
 				const b = this.bids.getPrice(price);
@@ -301,18 +324,16 @@ export default class OrderBook extends EventEmitter2 {
 
 	getSimpleBids() {
 		const bids: SimpleBook["bids"] = [];
-		// biome-ignore lint/complexity/noForEach: SortedDictionary is not iterable
-		this.bids.priceMap.forEach((order) => {
-			bids.push({ price: order.key, volume: this.getVolumeAtPrice("bid", order.key).toNumber() });
+		this.bids.priceMap.forEachPair((price, orderList) => {
+			bids.push({ price, volume: orderList.volume.toNumber() });
 		});
 		return bids;
 	}
 
 	getSimpleAsks() {
 		const asks: SimpleBook["asks"] = [];
-		// biome-ignore lint/complexity/noForEach: SortedDictionary is not iterable
-		this.asks.priceMap.forEach((order) => {
-			asks.push({ price: order.key, volume: this.getVolumeAtPrice("ask", order.key).toNumber() });
+		this.asks.priceMap.forEachPair((price, orderList) => {
+			asks.push({ price, volume: orderList.volume.toNumber() });
 		});
 		return asks;
 	}
@@ -324,17 +345,15 @@ export default class OrderBook extends EventEmitter2 {
 	toString() {
 		let str = "\n*** Asks (btm small) ***\n";
 		if (this.asks && this.asks.length > 0) {
-			// biome-ignore lint/complexity/noForEach: SortedDictionary is not iterable
-			this.asks.priceMap.forEach((order) => {
-				str += order.value.toString();
+			this.asks.priceMap.forEachPair((_price, orderList) => {
+				str += orderList.toString();
 			});
 		}
 
 		str += "\n*** Bids (top big) ***\n";
 		if (this.bids && this.bids.length > 0) {
-			// biome-ignore lint/complexity/noForEach: SortedDictionary is not iterable
-			this.bids.priceMap.forEach((order) => {
-				str += order.value.toString();
+			this.bids.priceMap.forEachPair((_price, orderList) => {
+				str += orderList.toString();
 			});
 		}
 

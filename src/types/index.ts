@@ -44,3 +44,7 @@ export interface SimpleBook {
 	bids: SimpleBookRecord[];
 	asks: SimpleBookRecord[];
 }
+
+export type OrderBookOptions = {
+	enableEvents?: boolean;
+};

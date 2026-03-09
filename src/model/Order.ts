@@ -26,7 +26,7 @@ export default class Order {
 
 	updateQuantity(quantity: number, timestamp: number) {
 		if (
-			new BigNumber(quantity).isGreaterThan(this.quantity) &&
+			this.quantity.isLessThan(quantity) &&
 			this.orderList.tailOrder !== null &&
 			this.orderList.tailOrder.toString() !== this.toString()
 		) {
