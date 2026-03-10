@@ -363,4 +363,114 @@ describe("LimitOrderBook", () => {
 		expect(orderBook.getBestAsk()).toBe(90);
 		expect(orderBook.getWorstAsk()).toBe(105);
 	});
+
+	it("Should return correct orderInBook for a non-crossing limit order", () => {
+		const { trades, orderInBook } = orderBook.processOrder({
+			type: "limit",
+			side: "bid",
+			quantity: 3,
+			price: 99,
+		});
+
+		expect(trades).toHaveLength(0);
+		expect(orderInBook).not.toBeNull();
+		expect(orderInBook?.side).toBe("bid");
+		expect(orderInBook?.price).toBe(99);
+		expect(orderInBook?.quantity).toBe(3);
+		expect(orderInBook?.orderId).toBeDefined();
+	});
+
+	it("Should return orderInBook with remaining quantity after partial match", () => {
+		for (const order of EXTERNAL_ORDERS) {
+			orderBook.processOrder(order);
+		}
+
+		const { trades, orderInBook } = orderBook.processOrder({
+			type: "limit",
+			side: "bid",
+			quantity: 5,
+			price: 102,
+		});
+
+		expect(trades).toHaveLength(1);
+		expect(trades[0].quantity).toBe(2);
+		expect(orderInBook).not.toBeNull();
+		expect(orderInBook?.quantity).toBe(3);
+		expect(orderInBook?.price).toBe(102);
+	});
+
+	it("Should match FIFO when multiple orders at same price", () => {
+		// Add two ask orders at the same price
+		const { orderInBook: first } = orderBook.processOrder({
+			type: "limit",
+			side: "ask",
+			quantity: 1,
+			price: 100,
+		});
+		const { orderInBook: second } = orderBook.processOrder({
+			type: "limit",
+			side: "ask",
+			quantity: 1,
+			price: 100,
+		});
+
+		// Buy 1 — should match the first order (FIFO)
+		const { trades } = orderBook.processOrder({
+			type: "limit",
+			side: "bid",
+			quantity: 1,
+			price: 100,
+		});
+
+		expect(trades).toHaveLength(1);
+		expect(trades[0].party1.orderId).toBe(first?.orderId);
+
+		// Second order should still be in book
+		expect(orderBook.getOrder(second?.orderId ?? "")).not.toBeNull();
+	});
+
+	it("Should track volume correctly after partial fills", () => {
+		for (const order of EXTERNAL_ORDERS) {
+			orderBook.processOrder(order);
+		}
+
+		expect(orderBook.getVolumeAtPrice("ask", 102)).toBe(2);
+
+		// Partially fill the ask@102
+		orderBook.processOrder({
+			type: "limit",
+			side: "bid",
+			quantity: 1,
+			price: 102,
+		});
+
+		expect(orderBook.getVolumeAtPrice("ask", 102)).toBe(1);
+	});
+
+	it("Should verify transaction party2 fields", () => {
+		for (const order of EXTERNAL_ORDERS) {
+			orderBook.processOrder(order);
+		}
+
+		const { trades } = orderBook.processOrder({
+			type: "limit",
+			side: "bid",
+			quantity: 1,
+			price: 102,
+		});
+
+		expect(trades[0].party1.side).toBe("ask");
+		expect(trades[0].party2.side).toBe("bid");
+		expect(trades[0].party2.orderId).toBeDefined();
+	});
+
+	it("Should produce a non-empty toString", () => {
+		for (const order of EXTERNAL_ORDERS) {
+			orderBook.processOrder(order);
+		}
+
+		const str = orderBook.toString();
+		expect(str).toContain("Asks");
+		expect(str).toContain("Bids");
+	});
 });
